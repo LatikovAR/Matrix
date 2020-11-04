@@ -77,3 +77,23 @@ void unit_test5() {
     assert(m == m_new);
     std::cout << "Unit_test5 complete.\n";
 }
+
+void unit_test6() {
+    Square_Matrix<double> m({{1.0, 0.0},
+                             {0.0, 1.0}});
+
+    double det = determinant(m);
+
+    assert(det == 1.0);
+    std::cout << "Unit_test6 complete.\n";
+}
+
+void unit_test7() {
+    Square_Matrix<int> m({{1, 1},
+                          {1, 1}});
+
+    int det = determinant(m);
+
+    assert(det == 0);
+    std::cout << "Unit_test7 complete.\n";
+}

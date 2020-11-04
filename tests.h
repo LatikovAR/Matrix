@@ -6,3 +6,8 @@ void unit_test2();
 void unit_test3();
 void unit_test4();
 void unit_test5();
+void unit_test6();
+void unit_test7();
+
+void test0();
+void test1();

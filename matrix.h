@@ -76,5 +76,7 @@ public:
 };
 
 double determinant(const Square_Matrix<double>& matrix);
+float determinant(const Square_Matrix<float>& matrix);
+int determinant(const Square_Matrix<int>& matrix);
 
 }
