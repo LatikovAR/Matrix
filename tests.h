@@ -11,3 +11,4 @@ void unit_test7();
 
 void test0();
 void test1();
+void long_test(int n_tests);

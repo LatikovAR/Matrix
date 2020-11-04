@@ -73,10 +73,12 @@ public:
     }
 
     ~Square_Matrix() {}
+
+    size_t ret_size() const { return Matrix<T>::column_size; }
 };
 
 double determinant(const Square_Matrix<double>& matrix);
 float determinant(const Square_Matrix<float>& matrix);
 int determinant(const Square_Matrix<int>& matrix);
-
+long long int determinant(const Square_Matrix<long long int>& input_matrix);
 }
