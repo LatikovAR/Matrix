@@ -29,6 +29,18 @@ void test1() {
     std::cout << "Test1 complete.\n";
 }
 
+void test2() {
+    Square_Matrix<int> m({{0, 0, 1, 1},
+                          {0, 0, 1, 2},
+                          {1, 1, 1, 1},
+                          {1, 2, 1, 1}});
+
+    int det = determinant(m);
+
+    assert(det == 1);
+    std::cout << "Test1 complete.\n";
+}
+
 namespace  {
 
 Square_Matrix<long long int> make_add_matrix(const Square_Matrix<long long int>& matrix,
@@ -106,7 +118,7 @@ void long_test(int n_tests = 1000) {
     size_t sum_bad_time = 0, sum_norm_time = 0;
 
     for(int i = 0; i < n_tests; ++i) {
-        Square_Matrix<long long int>m = matrix_generator(10);
+        Square_Matrix<long long int>m = matrix_generator(7);
 
         long start_time = clock();
         long long int bad_det = bad_determinant(m);
