@@ -1,4 +1,4 @@
-CXX = g++17
+CXX = g++
 CXXFLAGS = 
 
 DEF_SRC =  main.cpp matrix.cpp
