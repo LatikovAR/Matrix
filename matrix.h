@@ -29,6 +29,16 @@ private:
         return (lhs == rhs);
     }
 public:
+    Square_Matrix(const T* inp_data, size_t inp_size):
+        size_(inp_size)
+    {
+        if(size_ > 0) data_ = new T[size_ * size_];
+
+        for(size_t i = 0; i < size_ * size_; ++i) {
+            data_[i] = inp_data[i];
+        }
+    }
+
     Square_Matrix(const std::vector<std::vector<T>>& input_rows):
         size_(input_rows.size())
     {   
@@ -49,19 +59,11 @@ public:
         if(size_ > 0) delete [] data_;
     }
 
-    Square_Matrix(const Square_Matrix& matr):
-        size_(matr.size())
-    {
-        if(size_ > 0) data_ = new T[size_ * size_];
+    Square_Matrix(const Square_Matrix& matr): Square_Matrix(matr.data_, matr.size_) {}
 
-        for(size_t i = 0; i < size_; ++i) {
-            for(size_t j = 0; j < size_; ++j) {
-                data_[i * size_ + j] = matr.data_[i * size_ + j];
-            }
-        }
+    Square_Matrix& operator= (const Square_Matrix& matr) {
+        return Square_Matrix(matr);
     }
-
-    Square_Matrix& operator= (const Square_Matrix& matr) = delete;
 
     template<typename U> Square_Matrix(const Square_Matrix<U>& matr):
         size_(matr.size())
@@ -91,6 +93,15 @@ public:
         }
     }
 
+    void sub_row_to_row(size_t src_num, size_t dst_num) const {
+        assert((src_num < size_) && "invalid row number");
+        assert((dst_num < size_) && "invalid row number");
+
+        for(size_t i = 0; i < size_; ++i) {
+            data_[dst_num * size_ + i] -= data_[src_num * size_ + i];
+        }
+    }
+
     T operator()(size_t row_i, size_t column_i) const {
         assert((row_i < size_) && "invalid row");
         assert((column_i < size_) && "invalid column");
@@ -99,21 +110,93 @@ public:
 
     size_t size() const { return size_; }
 
-    bool operator==(const Square_Matrix<T>& matr) const {
-        if(size_ != matr.size()) return false;
+    bool operator==(const Square_Matrix<T>& rhs) const {
+        if(size_ != rhs.size()) return false;
 
         for(size_t i = 0; i < size_; ++i) {
             for(size_t j = 0; j < size_; ++j) {
-                if(!is_match(data_[i * size_ + j], matr(i, j))) return false;
+                if(!is_match(data_[i * size_ + j], rhs(i, j))) return false;
             }
         }
 
         return true;
     }
+
+    Square_Matrix& operator+=(const Square_Matrix<T>& rhs) {
+        assert((size_ == rhs.size()) && "different matrix sizes");
+        for(size_t i = 0; i < size_; ++i) {
+            for(size_t j = 0; j < size_; ++j) {
+                data_[i * size_ + j] += rhs(i, j);
+            }
+        }
+        return *this;
+    }
+
+    Square_Matrix& operator-=(const Square_Matrix<T>& rhs) {
+        assert((size_ == rhs.size()) && "different matrix sizes");
+        for(size_t i = 0; i < size_; ++i) {
+            for(size_t j = 0; j < size_; ++j) {
+                data_[i * size_ + j] -= rhs(i, j);
+            }
+        }
+        return *this;
+    }
+
+    Square_Matrix& operator*=(const Square_Matrix<T>& rhs) { //naive algorithm (almost)
+        assert((size_ == rhs.size()) && "different matrix sizes");
+        if(size_ == 0) return *this;
+
+        T *new_data = new T[size_ * size_];
+
+        Square_Matrix new_rhs(rhs);
+        new_rhs.transpose(); //for cache friendly
+
+        for(size_t i = 0; i < size_; ++i) {
+            for(size_t j = 0; j < size_; ++j) {
+                new_data[i * size_ + j] = 0;
+                for(size_t k = 0; k < size_; ++k) {
+                    new_data[i * size_ + j] += (data_[i * size_ + k] * new_rhs(j, k));
+                }
+            }
+        }
+
+        delete [] data_;
+        data_ = new_data;
+
+        return *this;
+    }
+
+    T determinant() const;
 };
 
-double determinant(const Square_Matrix<double>& matrix);
-float determinant(const Square_Matrix<float>& matrix);
-int determinant(const Square_Matrix<int>& matrix);
-long long int determinant(const Square_Matrix<long long int>& input_matrix);
+template<typename T>
+Square_Matrix<T> operator+(const Square_Matrix<T> lhs, const Square_Matrix<T> rhs) {
+    Square_Matrix<T> tmp(lhs);
+    tmp += rhs;
+    return tmp;
+}
+
+template<typename T>
+Square_Matrix<T> operator-(const Square_Matrix<T> lhs, const Square_Matrix<T> rhs) {
+    Square_Matrix<T> tmp(lhs);
+    tmp -= rhs;
+    return tmp;
+}
+
+template<typename T>
+Square_Matrix<T> operator*(const Square_Matrix<T> lhs, const Square_Matrix<T> rhs) {
+    Square_Matrix<T> tmp(lhs);
+    tmp *= rhs;
+    return tmp;
+}
+
+template<>
+double Square_Matrix<double>::determinant() const;
+
+template<>
+int Square_Matrix<int>::determinant() const;
+
+template<>
+long long int Square_Matrix<long long int>::determinant() const;
+
 }

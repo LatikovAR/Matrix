@@ -7,12 +7,14 @@
 
 using namespace matrix;
 
+namespace tests {
+
 void test0() {
     Square_Matrix<int> m({{1, 1, 1},
                           {1, 1, 1},
                           {1, 1, 1}});
 
-    int det = determinant(m);
+    int det = m.determinant();
 
     assert(det == 0);
     std::cout << "Test0 complete.\n";
@@ -23,7 +25,7 @@ void test1() {
                           {1, 0, 1},
                           {1, 1, 1}});
 
-    int det = determinant(m);
+    int det = m.determinant();
 
     assert(det == -1);
     std::cout << "Test1 complete.\n";
@@ -35,7 +37,7 @@ void test2() {
                           {1, 1, 1, 1},
                           {1, 2, 1, 1}});
 
-    int det = determinant(m);
+    int det = m.determinant();
 
     assert(det == 1);
     std::cout << "Test2 complete.\n";
@@ -125,7 +127,7 @@ void long_test(int n_tests = 1000) {
         long bad_time = clock() - start_time;
 
         start_time = clock();
-        long long int det = determinant(m);
+        long long int det = m.determinant();
         long norm_time = clock() - start_time;
 
         assert(det == bad_det);
@@ -140,4 +142,5 @@ void long_test(int n_tests = 1000) {
 
     std::cout << "Sum bad time = " << sum_bad_time << std::endl;
     std::cout << "Sum normal time = " << sum_norm_time << std::endl;
+}
 }

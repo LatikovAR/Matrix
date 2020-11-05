@@ -54,7 +54,8 @@ template <typename T> void U_step(const Square_Matrix<T>& matrix,
     }
 }
 
-template <typename T> T universal_determinant(const Square_Matrix<T>& input_matrix) {
+template<typename T>
+ T universal_determinant(const Square_Matrix<T> input_matrix)  {
     if(input_matrix.size() == 0) {
         return static_cast<T>(0);
     }
@@ -156,18 +157,23 @@ template <typename T> T universal_determinant(const Square_Matrix<T>& input_matr
     return det;
 }
 
-} //ending namespace {}
+} //ending namespace
 
-double determinant(const Square_Matrix<double>& input_matrix) {
-    return universal_determinant<double>(input_matrix);
+template<>
+double Square_Matrix<double>::determinant() const {
+    return universal_determinant(*this);
 }
 
-int determinant(const Square_Matrix<int>& input_matrix) {
-    return lround(universal_determinant<double>(Square_Matrix<double>(input_matrix)));
+template<>
+int Square_Matrix<int>::determinant() const {
+    Square_Matrix<double> matr_buf(*this);
+    return lround(universal_determinant(matr_buf));
 }
 
-long long int determinant(const Square_Matrix<long long int>& input_matrix) {
-    return llround(universal_determinant<double>(Square_Matrix<double>(input_matrix)));
+template<>
+long long int Square_Matrix<long long int>::determinant() const {
+    Square_Matrix<double> matr_buf(*this);
+    return llround(universal_determinant(matr_buf));
 }
 
 //... other types if will be need
