@@ -59,7 +59,7 @@ template <typename T> T universal_determinant(const Square_Matrix<T>& input_matr
         return static_cast<T>(0);
     }
 
-    Square_Matrix<T> matrix = input_matrix;
+    Square_Matrix<T> matrix(input_matrix);
     const size_t matr_size = matrix.size();
     std::vector<std::vector<T>> L;
     std::vector<std::vector<T>> U; //for LU decomposition it is transposed U (for speed)

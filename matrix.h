@@ -30,12 +30,13 @@ private:
     }
 public:
     Square_Matrix(const std::vector<std::vector<T>>& input_rows):
-        size_(input_rows.size()),
-        data_(new T[size_ * size_])
-    {
+        size_(input_rows.size())
+    {   
         for(const std::vector<T> &row : input_rows) {
             assert((row.size() == size_) && ("Invalid matrix size"));
         }
+
+        if(size_ > 0) data_ = new T[size_ * size_];
 
         for(size_t i = 0; i < size_; ++i) {
             for(size_t j = 0; j < size_; ++j) {
@@ -45,8 +46,31 @@ public:
     }
 
     ~Square_Matrix() {
-        if(size_ > 0) {
-            delete [] data_;
+        if(size_ > 0) delete [] data_;
+    }
+
+    Square_Matrix(const Square_Matrix& matr):
+        size_(matr.size())
+    {
+        if(size_ > 0) data_ = new T[size_ * size_];
+
+        for(size_t i = 0; i < size_; ++i) {
+            for(size_t j = 0; j < size_; ++j) {
+                data_[i * size_ + j] = matr.data_[i * size_ + j];
+            }
+        }
+    }
+
+    Square_Matrix& operator= (const Square_Matrix& matr) = delete;
+
+    template<typename U> Square_Matrix(const Square_Matrix<U>& matr):
+        size_(matr.size())
+    {
+        if(size_ > 0) data_ = new T[size_ * size_];
+        for(size_t i = 0; i < size_; ++i) {
+            for(size_t j = 0; j < size_; ++j) {
+                data_[i * size_ + j] = static_cast<T>(matr(i, j));
+            }
         }
     }
 
@@ -74,15 +98,6 @@ public:
     }
 
     size_t size() const { return size_; }
-
-    template<typename U> Square_Matrix(const Square_Matrix<U>& matr): size_(matr.size()) {
-        data_ = new T[size_ * size_];
-        for(size_t i = 0; i < size_; ++i) {
-            for(size_t j = 0; j < size_; ++j) {
-                data_[i * size_ + j] = static_cast<T>(matr(i, j));
-            }
-        }
-    }
 
     bool operator==(const Square_Matrix<T>& matr) const {
         if(size_ != matr.size()) return false;
