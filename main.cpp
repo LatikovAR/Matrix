@@ -3,7 +3,7 @@
 //TEST - check all tests
 //WORK - normal work with cin/cout
 
-//#define TEST
+#define TEST
 #include <iostream>
 #include <cstdlib>
 #include <vector>
