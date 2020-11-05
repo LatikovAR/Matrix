@@ -75,7 +75,7 @@ Square_Matrix<long long> gen_matrix(size_t size, long long det) {
 //better do it on templates but this way easier
 void print_matrix_in_file(char* filename, Square_Matrix<long long> m) {
     FILE *f = fopen(filename, "w");
-    fprintf(f, "%llu ", m.size());
+    fprintf(f, "%llu ", static_cast<unsigned long long>(m.size()));
     for(size_t i = 0; i < m.size(); ++i) {
         for(size_t j = 0; j < m.size(); ++j) {
             fprintf(f, "%lld ", m(i, j));
