@@ -1,6 +1,7 @@
 #include <cstdlib>
 #include <ctime>
 #include <cmath>
+#include <iostream>
 
 #include "matrix.h"
 
@@ -18,7 +19,7 @@ Square_Matrix<long long> gen_matrix(size_t size, long long det) {
         for(size_t j = 0; j < size; ++j) {
             long long buf = 0;
             if(i > j) {
-                buf = rand() % 10;
+                buf = rand() % 2;
             }
             if(i == j) {
                 buf = 1;
@@ -36,7 +37,7 @@ Square_Matrix<long long> gen_matrix(size_t size, long long det) {
         for(size_t j = 0; j < size; ++j) {
             long long buf = 0;
             if(i < j) {
-                buf = rand() % 10;
+                buf = rand() % 2;
             }
             if(i == j) {
                 if(i == 0) {
@@ -90,6 +91,7 @@ namespace generator {
 void generate_matrix(size_t size, long long det) {
     Square_Matrix<long long> m = gen_matrix(size, det);
 
+    std::cout << m.determinant() << std::endl;
     char filename[100] = "001.dat";
     print_matrix_in_file(filename, m);
 
