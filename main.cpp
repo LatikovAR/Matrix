@@ -3,7 +3,6 @@
 //TEST - check all tests
 //WORK - normal work with cin/cout
 
-#define GENERATOR
 #include <iostream>
 #include <cstdlib>
 #include <vector>

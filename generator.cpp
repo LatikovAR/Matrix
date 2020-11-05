@@ -91,7 +91,7 @@ namespace generator {
 void generate_matrix(size_t size, long long det) {
     Square_Matrix<long long> m = gen_matrix(size, det);
 
-    std::cout << m.determinant() << std::endl;
+    //std::cout << m.determinant() << std::endl;
     char filename[100] = "001.dat";
     print_matrix_in_file(filename, m);
 
