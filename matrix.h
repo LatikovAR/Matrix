@@ -45,7 +45,9 @@ public:
     }
 
     ~Square_Matrix() {
-        delete [] data_;
+        if(size_ > 0) {
+            delete [] data_;
+        }
     }
 
     void transpose() const {
