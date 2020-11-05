@@ -1,5 +1,6 @@
 #pragma once
 
+#include <iostream>
 #include <cstdlib>
 #include <vector>
 #include <cassert>
@@ -47,7 +48,7 @@ public:
         delete [] data_;
     }
 
-    void transpose() {
+    void transpose() const {
         for(size_t i = 0; i < size_; ++i) {
             for(size_t j = 0; j < i; ++j) {
                 std::swap(data_[i * size_ + j], data_[j * size_ + i]);
@@ -55,7 +56,7 @@ public:
         }
     }
 
-    void add_row_to_row(size_t src_num, size_t dst_num) {
+    void add_row_to_row(size_t src_num, size_t dst_num) const {
         assert((src_num < size_) && "invalid row number");
         assert((dst_num < size_) && "invalid row number");
 
@@ -81,7 +82,7 @@ public:
         }
     }
 
-    bool operator==(Square_Matrix<T> matr) {
+    bool operator==(const Square_Matrix<T>& matr) const {
         if(size_ != matr.size()) return false;
 
         for(size_t i = 0; i < size_; ++i) {

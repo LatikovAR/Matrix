@@ -156,22 +156,6 @@ template <typename T> T universal_determinant(const Square_Matrix<T>& input_matr
     return det;
 }
 
-Square_Matrix<double> change_type_to_double(const Square_Matrix<int>& m) {
-    std::vector<std::vector<double>> new_rows;
-    new_rows.resize(m.size());
-    for(size_t i = 0; i < m.size(); ++i) {
-        new_rows[i].resize(m.size());
-    }
-
-    for(size_t i = 0; i < m.size(); ++i) {
-        for(size_t j = 0; j < m.size(); ++j) {
-            new_rows[i][j] = static_cast<double>(m(i, j));
-        }
-    }
-
-    return Square_Matrix<double>(new_rows);
-}
-
 } //ending namespace {}
 
 double determinant(const Square_Matrix<double>& input_matrix) {
@@ -179,7 +163,7 @@ double determinant(const Square_Matrix<double>& input_matrix) {
 }
 
 int determinant(const Square_Matrix<int>& input_matrix) {
-    return lround(universal_determinant<double>(change_type_to_double(input_matrix)));
+    return lround(universal_determinant<double>(Square_Matrix<double>(input_matrix)));
 }
 
 long long int determinant(const Square_Matrix<long long int>& input_matrix) {
