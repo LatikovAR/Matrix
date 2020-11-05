@@ -4,77 +4,94 @@
 #include <vector>
 #include <cassert>
 #include <utility>
+#include <cmath>
+#include <new>
 
 namespace matrix {
 
-template <typename T> class Matrix {
-protected:
-    std::vector<std::vector<T>> rows;
-    size_t column_size;
-    size_t row_size;
+template <typename T> class Square_Matrix final {
+private:
+    const size_t size_;
+    T *data_;
+
+    static constexpr double DOUBLE_GAP = 1e-12;
+
+    static bool is_match(double lhs, double rhs) { //instead of ==
+        return (fabs(lhs - rhs) < DOUBLE_GAP);
+    }
+
+    static bool is_match(int lhs, int rhs) {
+        return (lhs == rhs);
+    }
+
+    static bool is_match(long long int lhs, long long int rhs) {
+        return (lhs == rhs);
+    }
 public:
-    Matrix(const std::vector<std::vector<T>>& input_rows):
-        rows(input_rows),
-        column_size(input_rows.size()),
-        row_size((input_rows.size() > 0) ? input_rows[0].size() : 0)
+    Square_Matrix(const std::vector<std::vector<T>>& input_rows):
+        size_(input_rows.size()),
+        data_(new T[size_ * size_])
     {
         for(const std::vector<T> &row : input_rows) {
-            assert((row.size() == row_size) && ("Different row.size() in matrix isn't available"));
+            assert((row.size() == size_) && ("Invalid matrix size"));
+        }
+
+        for(size_t i = 0; i < size_; ++i) {
+            for(size_t j = 0; j < size_; ++j) {
+                data_[i * size_ + j] = input_rows[i][j];
+            }
         }
     }
 
-    virtual ~Matrix() {}
+    ~Square_Matrix() {
+        delete [] data_;
+    }
 
     void transpose() {
-        std::vector<std::vector<T>> new_rows;
-        std::vector<T> row_buffer;
-
-        new_rows.resize(row_size);
-        row_buffer.resize(column_size);
-
-        for(size_t column_num = 0; column_num < row_size; ++column_num) {
-            for(size_t row_num = 0; row_num < column_size; ++row_num) {
-                row_buffer[row_num] = rows[row_num][column_num];
+        for(size_t i = 0; i < size_; ++i) {
+            for(size_t j = 0; j < i; ++j) {
+                std::swap(data_[i * size_ + j], data_[j * size_ + i]);
             }
-            new_rows[column_num] = row_buffer;
         }
-        rows = new_rows;
-
-        std::swap(row_size, column_size);
     }
 
     void add_row_to_row(size_t src_num, size_t dst_num) {
-        assert((src_num < column_size) && "invalid row number");
-        assert((dst_num < column_size) && "invalid row number");
+        assert((src_num < size_) && "invalid row number");
+        assert((dst_num < size_) && "invalid row number");
 
-        for(size_t i = 0; i < row_size; ++i) {
-            rows[dst_num][i] += rows[src_num][i];
+        for(size_t i = 0; i < size_; ++i) {
+            data_[dst_num * size_ + i] += data_[src_num * size_ + i];
         }
     }
 
     T operator()(size_t row_i, size_t column_i) const {
-        assert((row_i < column_size) && "invalid row");
-        assert((column_i < row_size) && "invalid column");
-        return rows[row_i][column_i];
+        assert((row_i < size_) && "invalid row");
+        assert((column_i < size_) && "invalid column");
+        return data_[row_i * size_ + column_i];
     }
 
-    size_t ret_column_size() const { return column_size; }
-    size_t ret_row_size() const { return row_size; }
+    size_t size() const { return size_; }
 
-    bool operator==(Matrix m) {
-        return (row_size == m.row_size) && (column_size == m.column_size) && (rows == m.rows);
-    }
-};
-
-template <typename T> class Square_Matrix final: public Matrix<T> {
-public:
-    Square_Matrix(const std::vector<std::vector<T>>& input_rows): Matrix<T>(input_rows) {
-        assert((Matrix<T>::column_size == Matrix<T>::row_size) && "It isn't square matrix");
+    template<typename U> Square_Matrix(const Square_Matrix<U>& matr): size_(matr.size()) {
+        data_ = new T[size_ * size_];
+        for(size_t i = 0; i < size_; ++i) {
+            for(size_t j = 0; j < size_; ++j) {
+                data_[i * size_ + j] = static_cast<T>(matr(i, j));
+            }
+        }
     }
 
-    ~Square_Matrix() {}
+    bool operator==(Square_Matrix<T> matr) {
+        if(size_ != matr.size()) return false;
 
-    size_t ret_size() const { return Matrix<T>::column_size; }
+        for(size_t i = 0; i < size_; ++i) {
+            for(size_t j = 0; j < size_; ++j) {
+                if(!is_match(data_[i * size_ + j], matr(i, j))) return false;
+            }
+        }
+
+        return true;
+    }
 };
 
 double determinant(const Square_Matrix<double>& matrix);

@@ -38,7 +38,7 @@ void test2() {
     int det = determinant(m);
 
     assert(det == 1);
-    std::cout << "Test1 complete.\n";
+    std::cout << "Test2 complete.\n";
 }
 
 namespace  {
@@ -46,19 +46,19 @@ namespace  {
 Square_Matrix<long long int> make_add_matrix(const Square_Matrix<long long int>& matrix,
                                              size_t e_row,
                                              size_t e_column) {
-    assert(e_row < matrix.ret_size());
-    assert(e_column < matrix.ret_size());
+    assert(e_row < matrix.size());
+    assert(e_column < matrix.size());
     std::vector<std::vector<long long int>> new_rows;
-    new_rows.resize(matrix.ret_size() - 1);
-    for(size_t i = 0; i < (matrix.ret_size() - 1); ++i) {
-        new_rows[i].resize(matrix.ret_size() - 1);
+    new_rows.resize(matrix.size() - 1);
+    for(size_t i = 0; i < (matrix.size() - 1); ++i) {
+        new_rows[i].resize(matrix.size() - 1);
     }
 
     size_t i_new = 0, j_new = 0;
-    for(size_t i = 0; i < matrix.ret_size(); ++i) {
+    for(size_t i = 0; i < matrix.size(); ++i) {
         if(i != e_row) {
             j_new = 0;
-            for(size_t j = 0; j < matrix.ret_size(); ++j) {
+            for(size_t j = 0; j < matrix.size(); ++j) {
                 if(j != e_column) {
                     new_rows[i_new][j_new] = matrix(i, j);
                     ++j_new;
@@ -74,15 +74,15 @@ Square_Matrix<long long int> make_add_matrix(const Square_Matrix<long long int>&
 //naive determinant
 //write with templates too lazily
 long long int bad_determinant(const Square_Matrix<long long int>& matrix) {
-    if(matrix.ret_size() == 0) {
+    if(matrix.size() == 0) {
         return 0;
     }
-    if(matrix.ret_size() == 1) {
+    if(matrix.size() == 1) {
         return matrix(0, 0);
     }
 
     long long int det = 0;
-    for(size_t i = 0; i < matrix.ret_size(); ++i) {
+    for(size_t i = 0; i < matrix.size(); ++i) {
         Square_Matrix<long long int> add_matrix = make_add_matrix(matrix, 0, i);
         long long int minor = bad_determinant(add_matrix);
 

@@ -32,10 +32,10 @@ template <typename T> T sum_for_determinant(std::vector<T>& L_str,
 
 //it is support function only for determinant()
 template <typename T> void L_step(const Square_Matrix<T>& matrix,
-                                                std::vector<std::vector<T>>& L,
-                                                std::vector<std::vector<T>>& U,
-                                                std::vector<T>& main_diag,
-                                                size_t i) {
+                                  std::vector<std::vector<T>>& L,
+                                  std::vector<std::vector<T>>& U,
+                                  std::vector<T>& main_diag,
+                                  size_t i) {
     L[i - 1][0] = matrix(i, 0) / main_diag[0];
 
     for(size_t j = 1; j < i; ++j) {
@@ -45,22 +45,22 @@ template <typename T> void L_step(const Square_Matrix<T>& matrix,
 
 //it is support function only for determinant()
 template <typename T> void U_step(const Square_Matrix<T>& matrix,
-                                                std::vector<std::vector<T>>& L,
-                                                std::vector<std::vector<T>>& U,
-                                                size_t i) {
+                                  std::vector<std::vector<T>>& L,
+                                  std::vector<std::vector<T>>& U,
+                                  size_t i) {
 
-    for(size_t j = i; j < (matrix.ret_size() - 1); ++j) {
+    for(size_t j = i; j < (matrix.size() - 1); ++j) {
         U[j][i] = matrix(i, j + 1) - sum_for_determinant<T>(L[i - 1], U[j], i);
     }
 }
 
 template <typename T> T universal_determinant(const Square_Matrix<T>& input_matrix) {
-    if(input_matrix.ret_column_size() == 0) {
+    if(input_matrix.size() == 0) {
         return static_cast<T>(0);
     }
 
     Square_Matrix<T> matrix = input_matrix;
-    const size_t matr_size = matrix.ret_size();
+    const size_t matr_size = matrix.size();
     std::vector<std::vector<T>> L;
     std::vector<std::vector<T>> U; //for LU decomposition it is transposed U (for speed)
     std::vector<T> main_diag; //of U
@@ -158,29 +158,13 @@ template <typename T> T universal_determinant(const Square_Matrix<T>& input_matr
 
 Square_Matrix<double> change_type_to_double(const Square_Matrix<int>& m) {
     std::vector<std::vector<double>> new_rows;
-    new_rows.resize(m.ret_size());
-    for(size_t i = 0; i < m.ret_size(); ++i) {
-        new_rows[i].resize(m.ret_size());
+    new_rows.resize(m.size());
+    for(size_t i = 0; i < m.size(); ++i) {
+        new_rows[i].resize(m.size());
     }
 
-    for(size_t i = 0; i < m.ret_size(); ++i) {
-        for(size_t j = 0; j < m.ret_size(); ++j) {
-            new_rows[i][j] = static_cast<double>(m(i, j));
-        }
-    }
-
-    return Square_Matrix<double>(new_rows);
-}
-
-Square_Matrix<double> change_type_to_double(const Square_Matrix<long long int>& m) {
-    std::vector<std::vector<double>> new_rows;
-    new_rows.resize(m.ret_size());
-    for(size_t i = 0; i < m.ret_size(); ++i) {
-        new_rows[i].resize(m.ret_size());
-    }
-
-    for(size_t i = 0; i < m.ret_size(); ++i) {
-        for(size_t j = 0; j < m.ret_size(); ++j) {
+    for(size_t i = 0; i < m.size(); ++i) {
+        for(size_t j = 0; j < m.size(); ++j) {
             new_rows[i][j] = static_cast<double>(m(i, j));
         }
     }
@@ -199,7 +183,7 @@ int determinant(const Square_Matrix<int>& input_matrix) {
 }
 
 long long int determinant(const Square_Matrix<long long int>& input_matrix) {
-    return llround(universal_determinant<double>(change_type_to_double(input_matrix)));
+    return llround(universal_determinant<double>(Square_Matrix<double>(input_matrix)));
 }
 
 //... other types if will be need
