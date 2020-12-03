@@ -16,27 +16,6 @@ namespace circuit {
 bool Edge_Info::is_prev_input_ok = true;
 bool Edge_Info::is_eof = false;
 
-namespace {
-//miss num symbols in the stream
-//ignores space symbols
-//0 - ok, -1 - wrong symbol or other problem
-int miss_symbols(std::stringstream& stream, char symbol, int num = 1) {
-    while(num > 0) {
-        char rec_sym;
-        stream >> rec_sym;
-        if(isspace(rec_sym)) continue;
-
-        if(!(stream.good()) || (symbol != rec_sym)) {
-            return -1;
-        }
-
-        num--;
-    }
-
-    return 0;
-}
-}
-
 Edge_Info Edge_Info::input_edge_info(size_t edge_number) {
     size_t begin = 0;
     size_t end = 0;
@@ -44,6 +23,7 @@ Edge_Info Edge_Info::input_edge_info(size_t edge_number) {
     double U = 0;
 
     std::string buf = {};
+    std::string trash = {};
 
     is_prev_input_ok = true;
     is_eof = false;
@@ -73,7 +53,8 @@ Edge_Info Edge_Info::input_edge_info(size_t edge_number) {
         return Edge_Info(0, 0, 0.0, 0.0, 0);
     }
 
-    if(miss_symbols(s_buf, '-', 2) < 0) {
+    s_buf >> trash;
+    if(!(s_buf.good()) || (trash != "--")) {
         std::cout << "Warning: invalid input format\n";
         is_prev_input_ok = false;
         return Edge_Info(begin, 0, 0.0, 0.0, 0);
@@ -86,7 +67,8 @@ Edge_Info Edge_Info::input_edge_info(size_t edge_number) {
         return Edge_Info(begin, 0, 0.0, 0.0, 0);
     }
 
-    if(miss_symbols(s_buf, ',') < 0) {
+    s_buf >> trash;
+    if(!(s_buf.good()) || (trash != ",")) {
         std::cout << "Warning: invalid input format\n";
         is_prev_input_ok = false;
         return Edge_Info(begin, end, 0.0, 0.0, 0);
@@ -99,30 +81,28 @@ Edge_Info Edge_Info::input_edge_info(size_t edge_number) {
         return Edge_Info(begin, end, 0.0, 0.0, 0);
     }
 
-    if(miss_symbols(s_buf, ';') < 0) {
-        std::cout << "Warning: invalid input format\n";
-        is_prev_input_ok = false;
-        return Edge_Info(begin, end, 0.0, 0.0, 0);
+    s_buf >> trash;
+    if((s_buf.eof() && s_buf) && (trash == ";")) {
+        return Edge_Info(begin, end, R, 0.0, edge_number);
     }
 
+    if(!(s_buf.good()) || (trash != ";")) {
+        std::cout << "Warning: invalid input format\n";
+        is_prev_input_ok = false;
+        return Edge_Info(begin, end, R, 0.0, 0);
+    }
 
     s_buf >> U;
     if(!(s_buf.good())) {
-        if(s_buf.eof()) return Edge_Info(begin, end, R, 0.0, edge_number); //correct input
         std::cout << "Warning: invalid input format\n";
         is_prev_input_ok = false;
         return Edge_Info(begin, end, R, 0.0, 0);
     }
 
-    if(miss_symbols(s_buf, 'V') < 0) {
-        std::cout << "Warning: invalid input format\n";
-        is_prev_input_ok = false;
-        return Edge_Info(begin, end, R, 0.0, 0);
-    }
-
-    char trash;
     s_buf >> trash;
-    if(s_buf.eof()) return Edge_Info(begin, end, R, U, edge_number); //correct input
+    if((s_buf.eof() && s_buf) && (trash == "V")) {
+        return Edge_Info(begin, end, R, U, edge_number);
+    }
 
     std::cout << "Warning: invalid input format\n";
     is_prev_input_ok = false;
