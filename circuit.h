@@ -2,6 +2,7 @@
 
 #include <vector>
 #include <utility>
+#include <cassert>
 
 #include "matrix/matrix.h"
 #include "dynamic_array/dynamic_array.h"
@@ -42,7 +43,7 @@ public:
     size_t end() const { return end_; }
     double R() const  { return R_; }
     double U() const { return U_; }
-    double I() const { return I_; } //undefined if solved_ == false
+    double I() const { assert(solved_ && "unsolved edge"); return I_; }
     bool is_solved() const { return solved_; }
     size_t number() const { return  number_; }
     size_t second_number() const { return  second_number_; }
