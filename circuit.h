@@ -16,7 +16,6 @@ private:
     double R_;
     double U_;
     double I_;
-    bool solved_ = false; //true when I_ will be defined
     size_t number_;
     size_t second_number_; //numeration for solving equations, without already defined edges
 
@@ -29,7 +28,8 @@ public:
 
     Edge_Info(size_t begin, size_t end, double R, double U, size_t number):
         begin_(begin), end_(end),
-        R_(R), U_(U),  number_(number) {}
+        R_(R), U_(U), I_(std::nan("")),
+        number_(number) {}
 
     static Edge_Info input_edge_info(size_t edge_number);
 
@@ -43,12 +43,11 @@ public:
     size_t end() const { return end_; }
     double R() const  { return R_; }
     double U() const { return U_; }
-    double I() const { assert(solved_ && "unsolved edge"); return I_; }
-    bool is_solved() const { return solved_; }
+    double I() const { return I_; } //returns NaN if I == undefined
     size_t number() const { return  number_; }
     size_t second_number() const { return  second_number_; }
 
-    void set_I(double I) { I_ = I; solved_ = true; }
+    void set_I(double I) { I_ = I;}
     void set_second_number(size_t n) { second_number_ = n; }
 };
 

@@ -5,6 +5,7 @@
 #include <utility>
 #include <set>
 #include <cassert>
+#include <cmath>
 
 #include "circuit.h"
 #include "dynamic_array/dynamic_array.h"
@@ -149,9 +150,7 @@ void Edge_Info::print() const {
     std::cout << begin_ << " -- " << end_ << std::endl;
     std::cout << "R = " << R_ << std::endl;
     std::cout << "U = " << U_ << std::endl;
-    if(is_solved())
-        std::cout << "I = " << I_ << "\n";
-    else std::cout << "I = UNDEFINED\n";
+    std::cout << "I = " << I_ << std::endl;
     std::cout << std::endl;
 }
 
@@ -556,7 +555,7 @@ void Circuit::find_all_currents() {
     std::vector<double>& I_array = answer.first;
     size_t edge_counter = 0;
     for(size_t i = 0; i < edges_info_.size(); ++i) {
-        if(edges_info_[i].is_solved() == false) {
+        if(std::isnan(edges_info_[i].I())) {
             assert(edges_info_[i].second_number() == edge_counter);
             edges_info_[i].set_I(I_array[edge_counter]);
             ++edge_counter;
@@ -585,7 +584,7 @@ void Circuit::define_all_undefined_elems_as_out_of_cycle() {
 size_t Circuit::set_second_numbers_in_edge_info() {
     size_t second_num = 0;
     for(size_t i = 0; i < edges_info_.size(); ++i) {
-        if(!edges_info_[i].is_solved()) {
+        if(std::isnan(edges_info_[i].I())) {
             edges_info_[i].set_second_number(second_num);
             ++second_num;
         }
@@ -692,6 +691,7 @@ std::pair<std::vector<double>, bool> Circuit::make_and_solve_linear_cicruit_equa
 void Circuit::print_circuit() const {
     for(size_t i = 0; i < edges_info_.size(); ++i) {
         const Edge_Info& cur_edge = edges_info_[i];
+        assert(!std::isnan(cur_edge.I()) && "unsolved edge");
         std::cout << cur_edge.begin() << " -- " << cur_edge.end() << " ";
         std::cout << cur_edge.I() << " A" << std::endl;
     }
