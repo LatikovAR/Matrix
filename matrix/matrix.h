@@ -8,6 +8,9 @@
 #include <cmath>
 #include <new>
 #include <typeinfo>
+#include <stdexcept>
+
+#include "mem_storage.h"
 
 namespace matrix {
 
@@ -34,43 +37,42 @@ public:
     virtual void print() const = 0;
 };
 
-template <typename T> class Matrix; //for conversion between different matrices
 
 template <typename T>
-class Square_Matrix final : public Abstract_Matrix<T> {
+class Square_Matrix final :
+        public Abstract_Matrix<T>,
+        protected mem_storage::Matrix_Storage<T>
+{
 private:
-    size_t size_ = 0;
-    T **data_ = nullptr;
+    const size_t& size_ = mem_storage::Matrix_Storage<T>::column_size_;
+    using mem_storage::Matrix_Storage<T>::data_;
+    using mem_storage::Matrix_Storage<T>::swap;
 
     using Abstract_Matrix<T>::is_match;
 
-    friend class Matrix<T>;
-
-    void new_data();
-
-    static T** new_data_buf(size_t size);
-
-    void delete_data();
+    T& elem_access(size_t row_i, size_t column_i);
 public:
-    Square_Matrix(const T *const *inp_data, size_t inp_size);
+    Square_Matrix() {}
+
+    Square_Matrix(const T *const *data, size_t size);
 
     Square_Matrix(const std::vector<std::vector<T>>& input_rows);
 
-    ~Square_Matrix() override;
+    ~Square_Matrix() override {}
 
-    Square_Matrix(const Square_Matrix& matr): Square_Matrix(matr.data_, matr.size_) {}
+    Square_Matrix(const Square_Matrix& rhs);
 
-    Square_Matrix& operator= (const Square_Matrix& matr)&;
+    Square_Matrix(size_t size);
 
-    template<typename U> Square_Matrix(const Square_Matrix<U>& matr);
+    Square_Matrix& operator= (const Square_Matrix& rhs)&;
+
+    template<typename U> Square_Matrix(const Square_Matrix<U>& rhs);
 
     void transpose() const;
 
     void add_row_to_row(size_t src_num, size_t dst_num) const;
 
-    void sub_row_to_row(size_t src_num, size_t dst_num) const;
-
-    void sub_row_to_row(size_t src_num, size_t dst_num, T koef) const;
+    void sub_row_to_row(size_t src_num, size_t dst_num, T koef = static_cast<T>(1)) const;
 
     void swap_rows(size_t row1_num, size_t row2_num) const;
 
@@ -95,42 +97,44 @@ public:
 
 
 template <typename T>
-class Matrix final : public Abstract_Matrix<T> {
+class Matrix final :
+        public Abstract_Matrix<T>,
+        protected mem_storage::Matrix_Storage<T>
+{
 private:
-    size_t column_size_ = 0;
-    size_t row_size_ = 0;
-    T **data_ = nullptr;
+    using mem_storage::Matrix_Storage<T>::column_size_;
+    using mem_storage::Matrix_Storage<T>::row_size_;
+    using mem_storage::Matrix_Storage<T>::data_;
+    using mem_storage::Matrix_Storage<T>::swap;
 
     using Abstract_Matrix<T>::is_match;
 
-    void new_data();
-
-    static T** new_data_buf(size_t column_size, size_t row_size);
-
-    void delete_data();
+    T& elem_access(size_t row_i, size_t column_i);
 public:
+    Matrix() {}
+
     //matrix elems should be contained in inp_data row by row
-    Matrix(const T *const *inp_data, size_t inp_column_size, size_t inp_row_size);
+    Matrix(const T *const *data, size_t column_size, size_t row_size);
 
     Matrix(const std::vector<std::vector<T>>& input_rows);
 
-    ~Matrix() override;
+    ~Matrix() override {}
 
-    Matrix(const Matrix& matr): Matrix(matr.data_, matr.column_size_, matr.row_size_) {}
+    Matrix(const Matrix& rhs);
 
-    Matrix& operator= (const Matrix& matr)&;
+    Matrix(size_t column_size, size_t row_size);
 
-    template<typename U> Matrix(const Matrix<U>& matr);
+    Matrix& operator= (const Matrix& rhs)&;
 
-    Matrix(const Square_Matrix<T>& matr): Matrix(matr.data_, matr.size_, matr.size_) {}
+    Matrix(const Square_Matrix<T>& rhs);
+
+    template<typename U> Matrix(const Matrix<U>& rhs);
 
     void transpose();
 
     void add_row_to_row(size_t src_num, size_t dst_num) const;
 
-    void sub_row_to_row(size_t src_num, size_t dst_num) const;
-
-    void sub_row_to_row(size_t src_num, size_t dst_num, T koef) const;
+    void sub_row_to_row(size_t src_num, size_t dst_num, T koef = static_cast<T>(1)) const;
 
     void swap_rows(size_t row1_num, size_t row2_num) const;
 
@@ -194,61 +198,25 @@ public:
 
 //----------------------------methods for Square_Matrix--------------------------------
 
-
 template<typename T>
-void Square_Matrix<T>::new_data() {
-    if(size_ > 0) {
-        data_ = new T*[size_];
-        for(size_t i = 0; i < size_; ++i) {
-            data_[i] = new T[size_];
-        }
-    }
-}
-
-template<typename T>
-T** Square_Matrix<T>::new_data_buf(size_t size) {
-    if(size == 0) return nullptr;
-    T** data = new T*[size];
-    for(size_t i = 0; i < size; ++i) {
-        data[i] = new T[size];
-    }
-    return data;
-}
-
-template<typename T>
-void Square_Matrix<T>::delete_data() {
-    if(size_ > 0) {
-        for(size_t i = 0; i < size_; ++i) {
-            delete [] data_[i];
-        }
-        delete [] data_;
-    }
-}
-
-
-
-template<typename T>
-Square_Matrix<T>::Square_Matrix(const T *const *inp_data, size_t inp_size):
-    size_(inp_size)
+Square_Matrix<T>::Square_Matrix(const T *const *data, size_t size):
+    mem_storage::Matrix_Storage<T>(size, size)
 {
-    new_data();
-
     for(size_t i = 0; i < size_; ++i) {
         for(size_t j = 0; j < size_; ++j) {
-            data_[i][j] = inp_data[i][j];
+            data_[i][j] = data[i][j];
         }
     }
 }
 
 template<typename T>
 Square_Matrix<T>::Square_Matrix(const std::vector<std::vector<T>>& input_rows):
-    size_(input_rows.size())
+    mem_storage::Matrix_Storage<T>(input_rows.size(), input_rows.size())
 {
     for(const std::vector<T> &row : input_rows) {
-        assert((row.size() == size_) && ("Invalid matrix size"));
+        if(row.size() != size_)
+            throw std::invalid_argument("Constructing matrix from non-suitable std::vector<std::vector<T>>");
     }
-
-    new_data();
 
     for(size_t i = 0; i < size_; ++i) {
         for(size_t j = 0; j < size_; ++j) {
@@ -258,40 +226,35 @@ Square_Matrix<T>::Square_Matrix(const std::vector<std::vector<T>>& input_rows):
 }
 
 template<typename T>
-Square_Matrix<T>::~Square_Matrix() {
-    delete_data();
+Square_Matrix<T>::Square_Matrix(const Square_Matrix& rhs):
+    mem_storage::Matrix_Storage<T>(rhs.size(), rhs.size())
+{
+    for(size_t i = 0; i < size_; ++i) {
+        for(size_t j = 0; j < size_; ++j) {
+            data_[i][j] = rhs(i, j);
+        }
+    }
 }
 
 template<typename T>
-Square_Matrix<T>& Square_Matrix<T>::operator= (const Square_Matrix<T>& matr)& {
-    if(this != &matr) {
-        delete_data();
+Square_Matrix<T>::Square_Matrix(size_t size):
+    mem_storage::Matrix_Storage<T>(size, size) {}
 
-        size_ = matr.size();
-
-        data_ = new_data();
-
-        for(size_t i = 0; i < size_; ++i) {
-            for(size_t j = 0; j < size_; ++j) {
-                data_[i][j] = matr(i, j);
-            }
-        }
-    }
-
+template<typename T>
+Square_Matrix<T>& Square_Matrix<T>::operator= (const Square_Matrix<T>& rhs)& {
+    Square_Matrix<T> tmp(rhs);
+    swap(tmp);
     return *this;
 }
 
 template<typename T>
 template<typename U>
-Square_Matrix<T>::Square_Matrix(const Square_Matrix<U>& matr):
-    size_(matr.size())
+Square_Matrix<T>::Square_Matrix(const Square_Matrix<U>& rhs):
+    mem_storage::Matrix_Storage<T>(rhs.size(), rhs.size())
 {
-
-    new_data();
-
     for(size_t i = 0; i < size_; ++i) {
         for(size_t j = 0; j < size_; ++j) {
-            data_[i][j] = static_cast<T>(matr(i, j));
+            data_[i][j] = static_cast<T>(rhs(i, j));
         }
     }
 }
@@ -307,8 +270,8 @@ void Square_Matrix<T>::transpose() const {
 
 template<typename T>
 void Square_Matrix<T>::add_row_to_row(size_t src_num, size_t dst_num) const {
-    assert((src_num < size_) && "invalid row number");
-    assert((dst_num < size_) && "invalid row number");
+    if((src_num >= size_) || (dst_num >= size_))
+        throw std::out_of_range("invalid matrix row number");
 
     for(size_t i = 0; i < size_; ++i) {
         data_[dst_num][i] += data_[src_num][i];
@@ -316,19 +279,9 @@ void Square_Matrix<T>::add_row_to_row(size_t src_num, size_t dst_num) const {
 }
 
 template<typename T>
-void Square_Matrix<T>::sub_row_to_row(size_t src_num, size_t dst_num) const {
-    assert((src_num < size_) && "invalid row number");
-    assert((dst_num < size_) && "invalid row number");
-
-    for(size_t i = 0; i < size_; ++i) {
-        data_[dst_num][i] -= data_[src_num][i];
-    }
-}
-
-template<typename T>
 void Square_Matrix<T>::sub_row_to_row(size_t src_num, size_t dst_num, T koef) const {
-    assert((src_num < size_) && "invalid row number");
-    assert((dst_num < size_) && "invalid row number");
+    if((src_num >= size_) || (dst_num >= size_))
+        throw std::out_of_range("invalid matrix row number");
 
     for(size_t i = 0; i < size_; ++i) {
         data_[dst_num][i] -= (data_[src_num][i] * koef);
@@ -337,28 +290,37 @@ void Square_Matrix<T>::sub_row_to_row(size_t src_num, size_t dst_num, T koef) co
 
 template<typename T>
 void Square_Matrix<T>::swap_rows(size_t row1_num, size_t row2_num) const {
-    assert((row1_num < size_) && (row2_num < size_) && "invalid row_num");
+    if((row1_num >= size_) || (row2_num >= size_))
+        throw std::out_of_range("invalid matrix row number");
     std::swap(data_[row1_num], data_[row2_num]);
 }
 
 template<typename T>
 void Square_Matrix<T>::mult_row_on_number(size_t row_num, T number) const {
-    assert((row_num < size_) && "invalid row_num");
+    if(row_num >= size_)
+        throw std::out_of_range("invalid matrix row number");
     for(size_t i = 0; i < size_; ++i) {
         data_[row_num][i] *= number;
     }
 }
 
 template<typename T>
-T Square_Matrix<T>::operator()(size_t row_i, size_t column_i) const {
-    assert((row_i < size_) && "invalid column");
-    assert((column_i < size_) && "invalid row");
-    return data_[row_i][column_i];
+T Square_Matrix<T>::operator()(size_t row_num, size_t column_num) const {
+    if((row_num >= size_) || (column_num >= size_))
+        throw std::out_of_range("invalid matrix elem");
+    return data_[row_num][column_num];
+}
+
+template<typename T>
+T& Square_Matrix<T>::elem_access(size_t row_num, size_t column_num) {
+    if((row_num >= size_) || (column_num >= size_))
+        throw std::out_of_range("invalid matrix elem");
+    return data_[row_num][column_num];
 }
 
 template<typename T>
 bool Square_Matrix<T>::operator==(const Abstract_Matrix<T>& inp_rhs) const {
-    if(typeid(*this) != typeid(inp_rhs)) return false; //IDE?
+    if(typeid(*this) != typeid(inp_rhs)) return false;
 
     const Square_Matrix<T>& rhs = static_cast<const Square_Matrix&>(inp_rhs);
 
@@ -375,7 +337,8 @@ bool Square_Matrix<T>::operator==(const Abstract_Matrix<T>& inp_rhs) const {
 
 template<typename T>
 Square_Matrix<T>& Square_Matrix<T>::operator+=(const Square_Matrix<T>& rhs) {
-    assert((size_ == rhs.size()) && "different matrix sizes");
+    if(size_ != rhs.size_)
+        throw std::invalid_argument("invalid matrices' sizes for +");
     for(size_t i = 0; i < size_; ++i) {
         for(size_t j = 0; j < size_; ++j) {
             data_[i][j] += rhs(i, j);
@@ -386,7 +349,8 @@ Square_Matrix<T>& Square_Matrix<T>::operator+=(const Square_Matrix<T>& rhs) {
 
 template<typename T>
 Square_Matrix<T>& Square_Matrix<T>::operator-=(const Square_Matrix<T>& rhs) {
-    assert((size_ == rhs.size()) && "different matrix sizes");
+    if(size_ != rhs.size_)
+        throw std::invalid_argument("invalid matrices' sizes for -");
     for(size_t i = 0; i < size_; ++i) {
         for(size_t j = 0; j < size_; ++j) {
             data_[i][j] -= rhs(i, j);
@@ -397,26 +361,24 @@ Square_Matrix<T>& Square_Matrix<T>::operator-=(const Square_Matrix<T>& rhs) {
 
 template<typename T>
 Square_Matrix<T>& Square_Matrix<T>::operator*=(const Square_Matrix<T>& rhs) { //naive algorithm (almost)
-    assert((size_ == rhs.size()) && "different matrix sizes");
+    if(size_ != rhs.size_)
+        throw std::invalid_argument("invalid matrices' sizes for *");
     if(size_ == 0) return *this;
 
-    T** new_data = new_data_buf(size_);
-
-    Square_Matrix new_rhs(rhs);
-    new_rhs.transpose(); //for cache friendly
+    Square_Matrix<T> res_tmp(size_);
+    Square_Matrix rhs_copy(rhs);
+    rhs_copy.transpose(); //for cache friendly
 
     for(size_t i = 0; i < size_; ++i) {
         for(size_t j = 0; j < size_; ++j) {
-            new_data[i][j] = 0;
+            res_tmp.elem_access(i, j) = 0;
             for(size_t k = 0; k < size_; ++k) {
-                new_data[i][j] += (data_[i][k] * new_rhs(j, k));
+                res_tmp.elem_access(i, j) += (data_[i][k] * rhs_copy(j, k));
             }
         }
     }
 
-    delete_data();
-    data_ = new_data;
-
+    swap(res_tmp);
     return *this;
 }
 
@@ -465,59 +427,26 @@ long long int Square_Matrix<long long int>::determinant() const;
 //----------------------------methods for Matrix----------------------------------------
 
 template<typename T>
-void Matrix<T>::new_data() {
-    if((column_size_ > 0) && (row_size_ > 0)) {
-        data_ = new T*[column_size_];
-        for(size_t i = 0; i < column_size_; ++i) {
-            data_[i] = new T[row_size_];
-        }
-    }
-}
-
-template<typename T>
-T** Matrix<T>::new_data_buf(size_t column_size, size_t row_size) {
-    if((column_size == 0) || (row_size == 0)) return nullptr;
-    T** data = new T*[column_size];
-    for(size_t i = 0; i < column_size; ++i) {
-        data[i] = new T[row_size];
-    }
-    return data;
-}
-
-template<typename T>
-void Matrix<T>::delete_data() {
-    if((column_size_ > 0) && (row_size_ > 0)) {
-        for(size_t i = 0; i < column_size_; ++i) {
-            delete [] data_[i];
-        }
-        delete [] data_;
-    }
-}
-
-template<typename T>
-Matrix<T>::Matrix(const T *const *inp_data, size_t inp_column_size, size_t inp_row_size):
-    column_size_(inp_column_size),
-    row_size_(inp_row_size)
+Matrix<T>::Matrix(const T *const *data, size_t column_size, size_t row_size):
+    mem_storage::Matrix_Storage<T>(column_size, row_size)
 {
-    new_data();
-
     for(size_t i = 0; i < column_size_; ++i) {
         for(size_t j = 0; j < row_size_; ++j) {
-            data_[i][j] = inp_data[i][j];
+            data_[i][j] = data[i][j];
         }
     }
 }
 
 template<typename T>
 Matrix<T>::Matrix(const std::vector<std::vector<T>>& input_rows):
-    column_size_(input_rows.size()),
-    row_size_((input_rows.size() > 0) ? input_rows[0].size() : 0)
+    mem_storage::Matrix_Storage<T>(
+        input_rows.size(),
+        (input_rows.size() > 0) ? input_rows[0].size() : 0)
 {
     for(const std::vector<T> &row : input_rows) {
-        assert((row.size() == row_size_) && ("Invalid matrix size"));
+        if(row.size() != row_size_)
+            throw std::invalid_argument("Constructing matrix from non-suitable std::vector<std::vector<T>>");
     }
-
-    new_data();
 
     for(size_t i = 0; i < column_size_; ++i) {
         for(size_t j = 0; j < row_size_; ++j) {
@@ -527,64 +456,68 @@ Matrix<T>::Matrix(const std::vector<std::vector<T>>& input_rows):
 }
 
 template<typename T>
-Matrix<T>::~Matrix() {
-    delete_data();
+Matrix<T>::Matrix(const Matrix& rhs):
+    mem_storage::Matrix_Storage<T>(rhs.column_size(), rhs.row_size())
+{
+    for(size_t i = 0; i < column_size_; ++i) {
+        for(size_t j = 0; j < row_size_; ++j) {
+            data_[i][j] = rhs(i, j);
+        }
+    }
 }
 
 template<typename T>
-Matrix<T>& Matrix<T>::operator= (const Matrix<T>& matr)& {
-    if(this != &matr) {
-        delete_data();
+Matrix<T>::Matrix(size_t column_size, size_t row_size):
+    mem_storage::Matrix_Storage<T>(column_size, row_size) {}
 
-        column_size_ = matr.column_size();
-        row_size_ = matr.row_size();
 
-        new_data();
-
-        for(size_t i = 0; i < column_size_; ++i) {
-            for(size_t j = 0; j < row_size_; ++j) {
-                data_[i][j] = matr(i, j);
-            }
-        }
-    }
-
+template<typename T>
+Matrix<T>& Matrix<T>::operator= (const Matrix<T>& rhs)& {
+    Matrix<T> tmp(rhs);
+    swap(tmp);
     return *this;
 }
 
 template<typename T>
 template<typename U>
-Matrix<T>::Matrix(const Matrix<U>& matr):
-    column_size_(matr.column_size()),
-    row_size_(matr.row_size())
+Matrix<T>::Matrix(const Matrix<U>& rhs):
+    mem_storage::Matrix_Storage<T>(rhs.column_size(), rhs.row_size())
 {
-    new_data();
     for(size_t i = 0; i < column_size_; ++i) {
         for(size_t j = 0; j < row_size_; ++j) {
-            data_[i][j] = static_cast<T>(matr(i, j));
+            data_[i][j] = static_cast<T>(rhs(i, j));
+        }
+    }
+}
+
+template<typename T>
+Matrix<T>::Matrix(const Square_Matrix<T>& rhs):
+    mem_storage::Matrix_Storage<T>(rhs.size(), rhs.size())
+{
+    for(size_t i = 0; i < column_size_; ++i) {
+        for(size_t j = 0; j < row_size_; ++j) {
+            data_[i][j] = rhs(i, j);
         }
     }
 }
 
 template<typename T>
 void Matrix<T>::transpose() {
-    T** new_data = new_data_buf(row_size_, column_size_);
+    Matrix<T> tmp(row_size_, column_size_);
 
     for(size_t i = 0; i < column_size_; ++i) {
         for(size_t j = 0; j < row_size_; ++j) {
-            new_data[j][i] = data_[i][j];
+            tmp.elem_access(j, i) = data_[i][j];
         }
     }
 
-    delete_data();
-
-    std::swap(row_size_, column_size_);
-    data_ = new_data;
+    swap(tmp);
 }
 
 template<typename T>
 void Matrix<T>::add_row_to_row(size_t src_num, size_t dst_num) const {
-    assert((src_num < column_size_) && "invalid row number");
-    assert((dst_num < column_size_) && "invalid row number");
+    if((src_num >= column_size_) || (dst_num >= column_size_))
+        throw std::out_of_range("invalid matrix row number");
 
     for(size_t i = 0; i < row_size_; ++i) {
         data_[dst_num][i] += data_[src_num][i];
@@ -592,19 +525,9 @@ void Matrix<T>::add_row_to_row(size_t src_num, size_t dst_num) const {
 }
 
 template<typename T>
-void Matrix<T>::sub_row_to_row(size_t src_num, size_t dst_num) const {
-    assert((src_num < column_size_) && "invalid row number");
-    assert((dst_num < column_size_) && "invalid row number");
-
-    for(size_t i = 0; i < row_size_; ++i) {
-        data_[dst_num][i] -= data_[src_num][i];
-    }
-}
-
-template<typename T>
 void Matrix<T>::sub_row_to_row(size_t src_num, size_t dst_num, T koef) const {
-    assert((src_num < column_size_) && "invalid row number");
-    assert((dst_num < column_size_) && "invalid row number");
+    if((src_num >= column_size_) || (dst_num >= column_size_))
+        throw std::out_of_range("invalid matrix row number");
 
     for(size_t i = 0; i < row_size_; ++i) {
         data_[dst_num][i] -= (data_[src_num][i] * koef);
@@ -613,13 +536,15 @@ void Matrix<T>::sub_row_to_row(size_t src_num, size_t dst_num, T koef) const {
 
 template<typename T>
 void Matrix<T>::swap_rows(size_t row1_num, size_t row2_num) const {
-    assert((row1_num < column_size_) && (row2_num < column_size_) && "invalid row_num");
+    if((row1_num >= column_size_) || (row2_num >= column_size_))
+        throw std::out_of_range("invalid matrix row number");
     std::swap(data_[row1_num], data_[row2_num]);
 }
 
 template<typename T>
 void Matrix<T>::mult_row_on_number(size_t row_num, T number) const {
-    assert((row_num < column_size_) && "invalid row_num");
+    if(row_num >= column_size_)
+        throw std::out_of_range("invalid matrix row number");
     for(size_t i = 0; i < row_size_; ++i) {
         data_[row_num][i] *= number;
     }
@@ -627,8 +552,15 @@ void Matrix<T>::mult_row_on_number(size_t row_num, T number) const {
 
 template<typename T>
 T Matrix<T>::operator()(size_t column_i, size_t row_i) const {
-    assert((row_i < row_size_) && "invalid column");
-    assert((column_i < column_size_) && "invalid row");
+    if((column_i >= column_size_) || (row_i >= row_size_))
+        throw std::out_of_range("invalid matrix elem");
+    return data_[column_i][row_i];
+}
+
+template<typename T>
+T& Matrix<T>::elem_access(size_t column_i, size_t row_i) {
+    if((column_i >= column_size_) || (row_i >= row_size_))
+        throw std::out_of_range("invalid matrix elem");
     return data_[column_i][row_i];
 }
 
@@ -651,8 +583,8 @@ bool Matrix<T>::operator==(const Abstract_Matrix<T>& inp_rhs) const {
 
 template<typename T>
 Matrix<T>& Matrix<T>::operator+=(const Matrix<T>& rhs) {
-    assert((row_size_ == rhs.row_size()) && "different matrix sizes");
-    assert((column_size_ == rhs.column_size()) && "different matrix sizes");
+    if((row_size_ != rhs.row_size()) || (column_size_ != rhs.column_size()))
+        throw std::invalid_argument("invalid matrices' sizes for +");
     for(size_t i = 0; i < column_size_; ++i) {
         for(size_t j = 0; j < row_size_; ++j) {
             data_[i][j] += rhs(i, j);
@@ -663,8 +595,8 @@ Matrix<T>& Matrix<T>::operator+=(const Matrix<T>& rhs) {
 
 template<typename T>
 Matrix<T>& Matrix<T>::operator-=(const Matrix<T>& rhs) {
-    assert((row_size_ == rhs.row_size()) && "different matrix sizes");
-    assert((column_size_ == rhs.column_size()) && "different matrix sizes");
+    if((row_size_ != rhs.row_size()) || (column_size_ != rhs.column_size()))
+        throw std::invalid_argument("invalid matrices' sizes for -");
     for(size_t i = 0; i < column_size_; ++i) {
         for(size_t j = 0; j < row_size_; ++j) {
             data_[i][j] -= rhs(i, j);
@@ -674,36 +606,32 @@ Matrix<T>& Matrix<T>::operator-=(const Matrix<T>& rhs) {
 }
 
 template<typename T>
-Matrix<T>& Matrix<T>::operator*=(const Matrix<T>& rhs) { //naive algorithm (almost)
-    assert((row_size_ == rhs.column_size()) && "invalid matrix sizes");
+Matrix<T>& Matrix<T>::operator*=(const Matrix<T>& rhs) {
+    if(row_size_ != rhs.column_size())
+        throw std::invalid_argument("invalid matrices' sizes for *");
 
     if((row_size_ == 0) || (column_size_ == 0)) return *this;
 
     if(rhs.row_size() == 0) {
-        delete_data();
-        data_ = nullptr;
-        row_size_ = 0;
+        Matrix<T> tmp(column_size_, 0);
+        swap(tmp);
         return *this;
     }
 
-    T** new_data = new_data_buf(column_size_, rhs.row_size());
-
-    Matrix new_rhs(rhs);
-    new_rhs.transpose(); //for cache friendly
+    Matrix<T> res_tmp(column_size_, rhs.row_size());
+    Matrix<T> rhs_copy(rhs);
+    rhs_copy.transpose(); //for cache friendly
 
     for(size_t i = 0; i < column_size_; ++i) {
-        for(size_t j = 0; j < new_rhs.column_size(); ++j) {
-            new_data[i][j] = 0;
+        for(size_t j = 0; j < rhs_copy.column_size(); ++j) {
+            res_tmp.elem_access(i, j) = 0;
             for(size_t k = 0; k < row_size_; ++k) {
-                new_data[i][j] += (data_[i][k] * new_rhs(j, k));
+                res_tmp.elem_access(i, j) += (data_[i][k] * rhs_copy(j, k));
             }
         }
     }
 
-    delete_data();
-    row_size_ = rhs.row_size();
-    data_ = new_data;
-
+    swap(res_tmp);
     return *this;
 }
 

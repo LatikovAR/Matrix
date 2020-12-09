@@ -286,6 +286,7 @@ void unit_test11() {
     Matrix<int> m1_new({{2, 2, 2},
                         {3, 3, 3},
                         {2, 2, 2}});
+    m1.print();
     assert(m1 == m1_new);
 
     std::cout << "Unit_test11 complete.\n";

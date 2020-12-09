@@ -2,7 +2,6 @@
 
 #include "circuit.h"
 
-
 int main() {
     std::vector<circuit::Edge_Info> edges_info = circuit::Edge_Info::input_edges_info();
     circuit::Circuit circuit(edges_info);
