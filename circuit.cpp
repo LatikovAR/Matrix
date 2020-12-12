@@ -139,7 +139,6 @@ std::vector<Edge_Info> Edge_Info::input_edges_info() {
             edges_info.push_back(edge_info);
             ++edge_number;
         }
-
     }
 
     return edges_info;

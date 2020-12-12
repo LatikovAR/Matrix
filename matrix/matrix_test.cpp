@@ -286,7 +286,6 @@ void unit_test11() {
     Matrix<int> m1_new({{2, 2, 2},
                         {3, 3, 3},
                         {2, 2, 2}});
-    m1.print();
     assert(m1 == m1_new);
 
     std::cout << "Unit_test11 complete.\n";
@@ -353,6 +352,18 @@ void unit_test15() {
     std::cout << "Unit_test15 complete.\n";
 }
 
+void unit_test16() {
+    Symmetric_Matrix<long long> m(2);
+
+    m(0, 0) = 1;
+    m(0, 1) = 2;
+    m(1, 1) = 1;
+
+    assert(m.determinant() == -3);
+
+    std::cout << "Unit_test16 complete.\n";
+}
+
 void matrix_test() {
     unit_test0();
     unit_test1();
@@ -370,6 +381,7 @@ void matrix_test() {
     unit_test13();
     unit_test14();
     unit_test15();
+    unit_test16();
     long_test(10);
 }
 

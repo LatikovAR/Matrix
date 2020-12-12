@@ -18,6 +18,7 @@ void unit_test12();
 void unit_test13();
 void unit_test14();
 void unit_test15();
+void unit_test16();
 
 void long_test(int n_tests);
 

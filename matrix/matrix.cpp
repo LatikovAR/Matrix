@@ -61,6 +61,24 @@ long long int Square_Matrix<long long int>::determinant() const {
     return llround(Universal_Determinant<double>(matr_buf).result());
 }
 
+template<>
+double Symmetric_Matrix<double>::determinant() const {
+    Square_Matrix<double> tmp(*this);
+    return tmp.determinant();
+}
+
+template<>
+int Symmetric_Matrix<int>::determinant() const {
+    Square_Matrix<int> tmp(*this);
+    return tmp.determinant();
+}
+
+template<>
+long long int Symmetric_Matrix<long long int>::determinant() const {
+    Square_Matrix<long long int> tmp(*this);
+    return tmp.determinant();
+}
+
 //... other types if will be need
 
 namespace {

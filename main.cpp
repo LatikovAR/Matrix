@@ -1,8 +1,10 @@
 #include <iostream>
 
 #include "circuit.h"
+//#include "matrix/matrix_test.h"
 
 int main() {
+    //matrix_tests::matrix_test();
     std::vector<circuit::Edge_Info> edges_info = circuit::Edge_Info::input_edges_info();
     circuit::Circuit circuit(edges_info);
 
