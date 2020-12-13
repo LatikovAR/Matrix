@@ -142,99 +142,65 @@ circuit_solver/fast:
 	$(MAKE) $(MAKESILENT) -f CMakeFiles/circuit_solver.dir/build.make CMakeFiles/circuit_solver.dir/build
 .PHONY : circuit_solver/fast
 
-#=============================================================================
-# Target rules for targets named matrix
-
-# Build rule for target.
-matrix: cmake_check_build_system
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 matrix
-.PHONY : matrix
-
-# fast build rule for target.
-matrix/fast:
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/matrix.dir/build.make CMakeFiles/matrix.dir/build
-.PHONY : matrix/fast
-
-circuit.o: circuit.cpp.o
-
+# target to build an object file
+circuit.o:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/circuit_solver.dir/build.make CMakeFiles/circuit_solver.dir/circuit.o
 .PHONY : circuit.o
 
-# target to build an object file
-circuit.cpp.o:
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/circuit_solver.dir/build.make CMakeFiles/circuit_solver.dir/circuit.cpp.o
-.PHONY : circuit.cpp.o
-
-circuit.i: circuit.cpp.i
-
+# target to preprocess a source file
+circuit.i:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/circuit_solver.dir/build.make CMakeFiles/circuit_solver.dir/circuit.i
 .PHONY : circuit.i
 
-# target to preprocess a source file
-circuit.cpp.i:
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/circuit_solver.dir/build.make CMakeFiles/circuit_solver.dir/circuit.cpp.i
-.PHONY : circuit.cpp.i
-
-circuit.s: circuit.cpp.s
-
+# target to generate assembly for a file
+circuit.s:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/circuit_solver.dir/build.make CMakeFiles/circuit_solver.dir/circuit.s
 .PHONY : circuit.s
 
+# target to build an object file
+input_output/input_output.o:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/circuit_solver.dir/build.make CMakeFiles/circuit_solver.dir/input_output/input_output.o
+.PHONY : input_output/input_output.o
+
+# target to preprocess a source file
+input_output/input_output.i:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/circuit_solver.dir/build.make CMakeFiles/circuit_solver.dir/input_output/input_output.i
+.PHONY : input_output/input_output.i
+
 # target to generate assembly for a file
-circuit.cpp.s:
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/circuit_solver.dir/build.make CMakeFiles/circuit_solver.dir/circuit.cpp.s
-.PHONY : circuit.cpp.s
+input_output/input_output.s:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/circuit_solver.dir/build.make CMakeFiles/circuit_solver.dir/input_output/input_output.s
+.PHONY : input_output/input_output.s
 
-main.o: main.cpp.o
-
+# target to build an object file
+main.o:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/circuit_solver.dir/build.make CMakeFiles/circuit_solver.dir/main.o
 .PHONY : main.o
 
-# target to build an object file
-main.cpp.o:
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/circuit_solver.dir/build.make CMakeFiles/circuit_solver.dir/main.cpp.o
-.PHONY : main.cpp.o
-
-main.i: main.cpp.i
-
+# target to preprocess a source file
+main.i:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/circuit_solver.dir/build.make CMakeFiles/circuit_solver.dir/main.i
 .PHONY : main.i
 
-# target to preprocess a source file
-main.cpp.i:
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/circuit_solver.dir/build.make CMakeFiles/circuit_solver.dir/main.cpp.i
-.PHONY : main.cpp.i
-
-main.s: main.cpp.s
-
+# target to generate assembly for a file
+main.s:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/circuit_solver.dir/build.make CMakeFiles/circuit_solver.dir/main.s
 .PHONY : main.s
 
-# target to generate assembly for a file
-main.cpp.s:
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/circuit_solver.dir/build.make CMakeFiles/circuit_solver.dir/main.cpp.s
-.PHONY : main.cpp.s
-
-matrix/matrix.o: matrix/matrix.cpp.o
-
+# target to build an object file
+matrix/matrix.o:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/circuit_solver.dir/build.make CMakeFiles/circuit_solver.dir/matrix/matrix.o
 .PHONY : matrix/matrix.o
 
-# target to build an object file
-matrix/matrix.cpp.o:
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/matrix.dir/build.make CMakeFiles/matrix.dir/matrix/matrix.cpp.o
-.PHONY : matrix/matrix.cpp.o
-
-matrix/matrix.i: matrix/matrix.cpp.i
-
+# target to preprocess a source file
+matrix/matrix.i:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/circuit_solver.dir/build.make CMakeFiles/circuit_solver.dir/matrix/matrix.i
 .PHONY : matrix/matrix.i
 
-# target to preprocess a source file
-matrix/matrix.cpp.i:
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/matrix.dir/build.make CMakeFiles/matrix.dir/matrix/matrix.cpp.i
-.PHONY : matrix/matrix.cpp.i
-
-matrix/matrix.s: matrix/matrix.cpp.s
-
-.PHONY : matrix/matrix.s
-
 # target to generate assembly for a file
-matrix/matrix.cpp.s:
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/matrix.dir/build.make CMakeFiles/matrix.dir/matrix/matrix.cpp.s
-.PHONY : matrix/matrix.cpp.s
+matrix/matrix.s:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/circuit_solver.dir/build.make CMakeFiles/circuit_solver.dir/matrix/matrix.s
+.PHONY : matrix/matrix.s
 
 # Help Target
 help:
@@ -245,10 +211,12 @@ help:
 	@echo "... edit_cache"
 	@echo "... rebuild_cache"
 	@echo "... circuit_solver"
-	@echo "... matrix"
 	@echo "... circuit.o"
 	@echo "... circuit.i"
 	@echo "... circuit.s"
+	@echo "... input_output/input_output.o"
+	@echo "... input_output/input_output.i"
+	@echo "... input_output/input_output.s"
 	@echo "... main.o"
 	@echo "... main.i"
 	@echo "... main.s"

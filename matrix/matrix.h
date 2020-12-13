@@ -9,7 +9,7 @@
 #include <typeinfo>
 #include <stdexcept>
 
-#include "mem_storage/mem_storage.h"
+#include "../mem_storage/mem_storage.h"
 
 namespace matrix {
 

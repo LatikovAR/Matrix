@@ -4,7 +4,7 @@
 #include <cstdlib>
 
 #include "input_output.h"
-#include "matrix/matrix.h"
+#include "../matrix/matrix.h"
 
 namespace  {
 struct Edge_Info {
