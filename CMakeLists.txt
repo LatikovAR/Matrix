@@ -3,7 +3,7 @@ project(circuit LANGUAGES CXX)
 set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 
-set(SOURCE_EXE main.cpp circuit.cpp)
+set(SOURCE_EXE main.cpp circuit.cpp input_output/input_output.cpp)
 
 set(SOURCE_LIB matrix/matrix.cpp)
 

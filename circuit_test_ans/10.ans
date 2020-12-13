@@ -1,2 +1,1 @@
-Input circuit can't be solved.
-Maybe you set some R <= 0.0.
+error: R < 0

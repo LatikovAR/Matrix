@@ -21,7 +21,7 @@ private:
     using Vector_Storage<T>::data_;
     using Vector_Storage<T>::swap;
 public:
-    dynamic_array(size_t size);
+    dynamic_array(size_t size = 0);
 
     dynamic_array(const std::vector<T>& rhs);
 
@@ -51,7 +51,7 @@ dynamic_array<T>::dynamic_array(const std::vector<T>& rhs):
     Vector_Storage<T>(rhs.size())
 {
     for(size_t i = 0; i < size_; ++i) {
-        data_[i] = rhs[i];
+        new (&(data_[i])) T(rhs[i]);
         ++used_;
     }
 }
@@ -61,7 +61,7 @@ dynamic_array<T>::dynamic_array(const dynamic_array& rhs):
     Vector_Storage<T> (rhs.size())
 {
     for(size_t i = 0; i < size_; ++i) {
-        data_[i] = rhs[i];
+        new (&(data_[i])) T(rhs[i]);
         ++used_;
     }
 }
@@ -88,5 +88,4 @@ const T& dynamic_array<T>::operator[](size_t i) const {
     }
     return data_[i];
 }
-
 }

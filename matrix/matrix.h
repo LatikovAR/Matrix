@@ -104,7 +104,7 @@ class Symmetric_Matrix final :
 {
 private:
     const size_t& size_ = mem_storage::Symmetric_Matrix_Storage<T>::size_;
-    T *const *const data_ = mem_storage::Symmetric_Matrix_Storage<T>::data_;
+    using mem_storage::Symmetric_Matrix_Storage<T>::data_;
     using mem_storage::Symmetric_Matrix_Storage<T>::used_;
     using mem_storage::Symmetric_Matrix_Storage<T>::swap;
 

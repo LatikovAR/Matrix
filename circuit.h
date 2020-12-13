@@ -3,6 +3,7 @@
 #include <vector>
 #include <utility>
 #include <cassert>
+#include <stdexcept>
 
 #include "matrix/matrix.h"
 #include "dynamic_array/dynamic_array.h"
@@ -19,11 +20,7 @@ private:
     size_t number_;
     size_t second_number_; //numeration for solving equations, without already defined edges
 
-    //for correct input of the edges
-    static bool is_prev_input_ok;
-    static bool is_eof;
 public:
-
     Edge_Info() {}
 
     Edge_Info(size_t begin, size_t end, double R, double U, size_t number):
@@ -31,9 +28,10 @@ public:
         R_(R), U_(U), I_(std::nan("")),
         number_(number) {}
 
-    static Edge_Info input_edge_info(size_t edge_number);
-
-    static std::vector<Edge_Info> input_edges_info();
+    Edge_Info(const Edge_Info& rhs):
+        begin_(rhs.begin_), end_(rhs.end_),
+        R_(rhs.R_), U_(rhs.U_), I_(rhs.I_),
+        number_(rhs.number_)  {}
 
     void print() const;
 
@@ -100,7 +98,7 @@ private:
         bool visited = false; //for graph traversal
         Condition condition = UNDEFINED;
 
-        //adding edges after starting solving process is UB
+        //adding edges after starting solving process is mistake
         void add_edge(Edge* edge) {
             edges_.push_back(edge);
             if (edge->condition == UNDEFINED) ++num_edges_undefined_;
@@ -134,8 +132,6 @@ private:
     };
 
     struct comp_for_build_circuit_graph;
-
-    bool validity_ = true;
 
     //Dynamic_array is non-standart container that used for Circuit data
     //Circuit data containers should have some specifications:
@@ -172,8 +168,15 @@ private:
 
     //returns number of undefined edges
     size_t set_second_numbers_in_edge_info();
+
+    matrix::Symmetric_Matrix<double> build_answer();
+
 public:
-    Circuit(const std::vector<Edge_Info>& edges_info_);
+    Circuit(const matrix::Symmetric_Matrix<bool>& topology,
+            const matrix::Symmetric_Matrix<double>& R,
+            const matrix::Symmetric_Matrix<double>& U);
+
+    matrix::Symmetric_Matrix<double> solve();
 
     void print_vertices_all() const; //for debug
     void print_edges_all() const; //for debug
@@ -181,10 +184,18 @@ public:
     //for debug, and also check cycles validity
     void print_cycles_all() const;
 
-    bool validity() const { return validity_; }
+    void print_circuit() const;
 
-    //Undefined if validity() = false
-    void print_circuit() const ;
+    class invalid_circuit final {
+    private:
+        std::string message_;
+    public:
+        invalid_circuit(std::string message)
+        noexcept(noexcept(std::string(message))):
+            message_(message) {}
+
+        std::string& what() noexcept { return message_; }
+    };
 };
 
 } //namespace circuit

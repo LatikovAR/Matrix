@@ -1,19 +1,20 @@
 #include <iostream>
 
 #include "circuit.h"
+#include "input_output/input_output.h"
 //#include "matrix/matrix_test.h"
 
 int main() {
     //matrix_tests::matrix_test();
-    std::vector<circuit::Edge_Info> edges_info = circuit::Edge_Info::input_edges_info();
-    circuit::Circuit circuit(edges_info);
+    input_output::Input_Data input_data;
+    try {
+        circuit::Circuit circuit(input_data.topology(),
+                                 input_data.R(), input_data.U());
+        input_data.print_solution(circuit.solve());
+    }
+    catch (circuit::Circuit::invalid_circuit& exc) {
+        std::cout << exc.what() << std::endl;
+    }
 
-    if(circuit.validity() == true) {
-        circuit.print_circuit();
-    }
-    else {
-        std::cout << "Input circuit can't be solved.\n";
-        std::cout << "Maybe you set some R <= 0.0.\n";
-    }
     return 0;
 }

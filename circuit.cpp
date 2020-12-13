@@ -6,6 +6,7 @@
 #include <set>
 #include <cassert>
 #include <cmath>
+#include <stdexcept>
 
 #include "circuit.h"
 #include "dynamic_array/dynamic_array.h"
@@ -13,136 +14,7 @@
 
 namespace circuit {
 
-//------------------------------------Edge_Info methods-------------------------------------
-bool Edge_Info::is_prev_input_ok = true;
-bool Edge_Info::is_eof = false;
-
-namespace {
-//miss num symbols in the stream
-//ignores space symbols
-//0 - ok, -1 - wrong symbol or other problem
-int miss_symbols(std::stringstream& stream, char symbol, int num = 1) {
-    while(num > 0) {
-        char rec_sym;
-        stream >> rec_sym;
-        if(isspace(rec_sym)) continue;
-
-        if(!(stream.good()) || (symbol != rec_sym)) {
-            return -1;
-        }
-
-        num--;
-    }
-
-    return 0;
-}
-}
-
-Edge_Info Edge_Info::input_edge_info(size_t edge_number) {
-    size_t begin = 0;
-    size_t end = 0;
-    double R = 0;
-    double U = 0;
-
-    std::string buf = {};
-
-    is_prev_input_ok = true;
-    is_eof = false;
-
-    std::getline(std::cin, buf, '\n');
-    if(std::cin.eof()) {
-        is_eof = true;
-        if(buf == "") { //sometimes it can be useful
-            is_prev_input_ok = false;
-            return Edge_Info(0, 0, 0.0, 0.0, 0);
-        }
-    }
-    if(std::cin.fail() && !(std::cin.eof())) {
-        std::cout << "Warning: invalid str input format\n";
-        is_prev_input_ok = false;
-        return Edge_Info(0, 0, 0.0, 0.0, 0);
-    }
-
-    std::stringstream s_buf;
-
-    s_buf << buf;
-
-    s_buf >> begin;
-    if(!(s_buf.good())) {
-        std::cout << "Warning: invalid input format\n";
-        is_prev_input_ok = false;
-        return Edge_Info(0, 0, 0.0, 0.0, 0);
-    }
-
-    if(miss_symbols(s_buf, '-', 2) < 0) {
-        std::cout << "Warning: invalid input format\n";
-        is_prev_input_ok = false;
-        return Edge_Info(begin, 0, 0.0, 0.0, 0);
-    }
-
-    s_buf >> end;
-    if(!(s_buf.good())) {
-        std::cout << "Warning: invalid input format\n";
-        is_prev_input_ok = false;
-        return Edge_Info(begin, 0, 0.0, 0.0, 0);
-    }
-
-    if(miss_symbols(s_buf, ',') < 0) {
-        std::cout << "Warning: invalid input format\n";
-        is_prev_input_ok = false;
-        return Edge_Info(begin, end, 0.0, 0.0, 0);
-    }
-
-    s_buf >> R;
-    if(!(s_buf.good())) {
-        std::cout << "Warning: invalid input format\n";
-        is_prev_input_ok = false;
-        return Edge_Info(begin, end, 0.0, 0.0, 0);
-    }
-
-    if(miss_symbols(s_buf, ';') < 0) {
-        std::cout << "Warning: invalid input format\n";
-        is_prev_input_ok = false;
-        return Edge_Info(begin, end, 0.0, 0.0, 0);
-    }
-
-
-    s_buf >> U;
-    if(!(s_buf.good())) {
-        if(s_buf.eof()) return Edge_Info(begin, end, R, 0.0, edge_number); //correct input
-        std::cout << "Warning: invalid input format\n";
-        is_prev_input_ok = false;
-        return Edge_Info(begin, end, R, 0.0, 0);
-    }
-
-    if(miss_symbols(s_buf, 'V') < 0) {
-        std::cout << "Warning: invalid input format\n";
-        is_prev_input_ok = false;
-        return Edge_Info(begin, end, R, 0.0, 0);
-    }
-
-    char trash;
-    s_buf >> trash;
-    if(s_buf.eof()) return Edge_Info(begin, end, R, U, edge_number); //correct input
-
-    std::cout << "Warning: invalid input format\n";
-    is_prev_input_ok = false;
-    return Edge_Info(begin, end, R, U, 0);
-}
-
-std::vector<Edge_Info> Edge_Info::input_edges_info() {
-    std::vector<Edge_Info> edges_info;
-    size_t edge_number = 0;
-    while(is_eof == false) {
-        Edge_Info edge_info = input_edge_info(edge_number);
-        if(is_prev_input_ok) {
-            edges_info.push_back(edge_info);
-            ++edge_number;
-        }
-    }
-
-    return edges_info;
-}
+//------------------------------------Edge_Info methods----------------------------------
 
 void Edge_Info::print() const {
     std::cout << "Edge: " << number_ << std::endl;
@@ -345,20 +217,55 @@ size_t num_of_vertices(const std::vector<Edge_Info>& edges_info) {
 }
 }
 
-Circuit::Circuit(const std::vector<Edge_Info>& edges_info):
-    edges_info_(edges_info),
-    vertices_(num_of_vertices(edges_info)),
-    edges_(edges_info.size())
-{
-    build_circuit_graph();
-    if(validity_ == false) return;
-    //print_vertices_all();
+Circuit::Circuit(const matrix::Symmetric_Matrix<bool>& topology,
+                 const matrix::Symmetric_Matrix<double>& R,
+                 const matrix::Symmetric_Matrix<double>& U) {
+    size_t matr_size = topology.size();
+    assert(matr_size == R.size());
+    assert(matr_size == U.size());
 
+    std::vector<Edge_Info> tmp;
+    size_t edge_number = 0;
+
+    for(size_t i = 0; i < matr_size; ++i) {
+        for(size_t j = i; j < matr_size; ++j) {
+            if(topology(i, j)) {
+                Edge_Info edge_info(i, j, R(i, j), U(i, j), edge_number);
+                tmp.push_back(edge_info);
+                edge_number++;
+            }
+        }
+    }
+
+    edges_info_ = dyn_arr::dynamic_array<Edge_Info>(tmp);
+    vertices_ = dyn_arr::dynamic_array<Vertex>(num_of_vertices(tmp));
+    edges_ = dyn_arr::dynamic_array<Edge>(tmp.size());
+
+    build_circuit_graph();
+}
+
+matrix::Symmetric_Matrix<double> Circuit::solve() {
     find_all_currents();
-    //print_vertices_all();
+    return build_answer();
 }
 
 
+matrix::Symmetric_Matrix<double> Circuit::build_answer() {
+    size_t max_vert_num = 0;
+    for(size_t i = 0; i < edges_info_.size(); ++i) {
+        const Edge_Info& edge_info = edges_info_[i];
+        if(edge_info.begin() > max_vert_num) max_vert_num = edge_info.begin();
+        if(edge_info.end() > max_vert_num) max_vert_num = edge_info.end();
+    }
+
+    matrix::Symmetric_Matrix<double> I(max_vert_num + 1);
+    for(size_t i = 0; i < edges_info_.size(); ++i) {
+        const Edge_Info& edge_info = edges_info_[i];
+        I(edge_info.begin(), edge_info.end()) = edge_info.I();
+    }
+
+    return I;
+}
 
 struct Circuit::comp_for_build_circuit_graph {
     bool operator() (const std::pair<size_t, Vertex*>& lhs,
@@ -375,8 +282,7 @@ void Circuit::build_circuit_graph() {
     std::set<size_t> vertices_nums;
     for(size_t i = 0; i < edges_info_.size(); ++i) {
         if(edges_info_[i].R() < 0) {
-            validity_ = false;
-            return;
+            throw invalid_circuit{"error: R < 0"};
         }
         vertices_nums.insert(edges_info_[i].begin());
         vertices_nums.insert(edges_info_[i].end());
@@ -546,8 +452,7 @@ void Circuit::find_all_currents() {
     answer = make_and_solve_linear_cicruit_equations();
 
     if(answer.second == false) {
-        validity_ = false;
-        return;
+        throw invalid_circuit("error: infinity current");
     }
 
     //pushing answer in edge_info;
