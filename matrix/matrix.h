@@ -59,7 +59,7 @@ public:
 
     Square_Matrix(const Square_Matrix& rhs);
 
-    Square_Matrix(const Symmetric_Matrix<T>& rhs);
+    explicit Square_Matrix(const Symmetric_Matrix<T>& rhs);
 
     Square_Matrix(size_t size = 0);
 
@@ -127,7 +127,7 @@ public:
 
     bool operator==(const Abstract_Matrix<T>& inp_rhs) const override;
 
-    Symmetric_Matrix& operator+=(const Symmetric_Matrix& rhs)&;
+    Symmetric_Matrix& operator+=(const Symmetric_Matrix<T>& rhs)&;
 
     Symmetric_Matrix& operator-=(const Symmetric_Matrix<T>& rhs)&;
 
@@ -164,9 +164,9 @@ public:
 
     Matrix& operator= (const Matrix& rhs)&;
 
-    Matrix(const Square_Matrix<T>& rhs);
+    explicit Matrix(const Square_Matrix<T>& rhs);
 
-    Matrix(const Symmetric_Matrix<T>& rhs);
+    explicit Matrix(const Symmetric_Matrix<T>& rhs);
 
     template<typename U> Matrix(const Matrix<U>& rhs);
 
@@ -560,7 +560,7 @@ template<typename T>
 bool Symmetric_Matrix<T>::operator==(const Abstract_Matrix<T>& inp_rhs) const {
     if(typeid(*this) != typeid(inp_rhs)) return false;
 
-    const Square_Matrix<T>& rhs = static_cast<const Symmetric_Matrix&>(inp_rhs);
+    const Symmetric_Matrix<T>& rhs = static_cast<const Symmetric_Matrix&>(inp_rhs);
 
     if(size_ != rhs.size()) return false;
 

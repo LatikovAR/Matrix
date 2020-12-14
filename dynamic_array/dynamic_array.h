@@ -89,3 +89,4 @@ const T& dynamic_array<T>::operator[](size_t i) const {
     return data_[i];
 }
 }
+
