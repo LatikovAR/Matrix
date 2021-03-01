@@ -32,7 +32,14 @@ protected:
     Vector_Storage(const Vector_Storage&) = delete;
     Vector_Storage& operator=(const Vector_Storage&) = delete;
 
-    virtual void swap(Vector_Storage& rhs) noexcept {
+    Vector_Storage(Vector_Storage&& rhs) noexcept {
+        data_ = rhs.data_;
+        rhs.data_ = nullptr;
+        size_ = rhs.size_;
+        used_ = rhs.used_;
+    }
+
+    void swap(Vector_Storage& rhs) noexcept {
         std::swap(used_, rhs.used_);
         std::swap(size_, rhs.size_);
         std::swap(data_, rhs.data_);
@@ -64,12 +71,19 @@ protected:
         }
     }
 
-    virtual ~Matrix_Storage() {}
+    virtual ~Matrix_Storage() = default;
 
     Matrix_Storage(const Matrix_Storage<T>&) = delete;
     Matrix_Storage& operator=(const Matrix_Storage<T>&) = delete;
 
-    virtual void swap(Matrix_Storage<T>& rhs) noexcept {
+    Matrix_Storage(Matrix_Storage&& rhs) noexcept:
+        Vector_Storage<T*>(std::move(rhs.Vector_Storage)),
+        Vector_Storage<T>(std::move(rhs.Vector_Storage))
+    {
+        row_size_ = rhs.row_size_;
+    }
+
+    void swap(Matrix_Storage<T>& rhs) noexcept {
         Vector_Storage<T>::swap(rhs);
         Vector_Storage<T*>::swap(rhs);
         std::swap(row_size_, rhs.row_size_);
@@ -106,12 +120,16 @@ protected:
         }
     }
 
-    virtual ~Symmetric_Matrix_Storage() {}
+    virtual ~Symmetric_Matrix_Storage() = default;
 
     Symmetric_Matrix_Storage(const Symmetric_Matrix_Storage<T>&) = delete;
     Symmetric_Matrix_Storage& operator=(const Symmetric_Matrix_Storage<T>&) = delete;
 
-    virtual void swap(Symmetric_Matrix_Storage<T>& rhs) noexcept {
+    Symmetric_Matrix_Storage(Symmetric_Matrix_Storage&& rhs) noexcept:
+        Vector_Storage<T*>(std::move(rhs.Vector_Storage)),
+        Vector_Storage<T>(std::move(rhs.Vector_Storage)) {}
+
+    void swap(Symmetric_Matrix_Storage<T>& rhs) noexcept {
         Vector_Storage<T>::swap(rhs);
         Vector_Storage<T*>::swap(rhs);
     }

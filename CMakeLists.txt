@@ -1,10 +1,12 @@
-project(circuit LANGUAGES CXX)
+cmake_minimum_required(VERSION 3.5)
+
+project(matrix_mult LANGUAGES CXX)
 
 set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 
-include_directories(input_output matrix mem_storage dynamic_array)
+add_subdirectory(Matrix)
 
-set(SOURCE_EXE main.cpp circuit.cpp input_output/input_output.cpp matrix/matrix.cpp)
+include_directories(mem_storage dynamic_array)
 
-add_executable(circuit_solver ${SOURCE_EXE})
+add_executable(matrix_mult main.cpp matrix)

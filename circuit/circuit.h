@@ -190,8 +190,7 @@ public:
     private:
         std::string message_;
     public:
-        invalid_circuit(std::string message)
-        noexcept(noexcept(std::string(message))):
+        invalid_circuit(std::string message):
             message_(message) {}
 
         std::string& what() noexcept { return message_; }
