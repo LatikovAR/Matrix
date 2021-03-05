@@ -36,7 +36,9 @@ protected:
         data_ = rhs.data_;
         rhs.data_ = nullptr;
         size_ = rhs.size_;
+        rhs.size_ = 0; //is need?
         used_ = rhs.used_;
+        rhs.used_ = 0; //is need?
     }
 
     void swap(Vector_Storage& rhs) noexcept {
@@ -81,6 +83,7 @@ protected:
         Vector_Storage<T>(std::move(rhs.Vector_Storage))
     {
         row_size_ = rhs.row_size_;
+        rhs.row_size_ = 0; //is need?
     }
 
     void swap(Matrix_Storage<T>& rhs) noexcept {
