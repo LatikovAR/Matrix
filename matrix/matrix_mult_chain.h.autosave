@@ -1,0 +1,91 @@
+#pragma once
+
+#include <vector>
+#include <stdexcept>
+#include <map>
+#include <set>
+
+#include "matrix.h"
+
+namespace matrix {
+
+template<typename T>
+class Matrix_Chain final {
+private:
+    //Trace is a way of multiplication execution
+    //contains numbers of "*" in some execution order 
+    class Trace final {
+        std::vector<size_t> data_;
+        
+    public:
+        size_t size() const { return data_.size();}
+        void reserve(size_t new_cap) { data_.reserve(new_cap); }
+        void push_back(size_t elem) { data_.push_back(elem); }
+        auto begin() { data_.begin(); }
+        auto end() { data_.end(); }
+    };
+    
+    //inserting in vector isn't so fast as in list
+    //but vector is better for elems access
+    std::vector<Matrix<T>> chain_;
+    
+    //trace_levels_ - vector with calculation traces of multiplication
+    //every level contains traces with the same length
+    //first level <=> length = 0
+    //std::map<std::set<size_t>, Trace> - map from one level traces
+    //Key = std::set<size_t> - consists of calculated "*" numbers
+    //for every Key stores the shortest trace
+    std::vector<std::map<std::set<size_t>, Trace>> traces_levels_;
+    
+    std::map<std::set<size_t>, Trace> optimal_trace_;
+    
+    void make_first_trace_level
+public:
+    Matrix_Chain() = default;
+    ~Matrix_Chain() = default;
+
+    size_t matrix_num() const { return chain_.size(); }
+    const Matrix<T>& ret_matrix(size_t number) const;
+
+    //insert matrix in chain before matrix with number "pos"
+    //so added matrix have number "pos" after inserting
+    //allowed pos == chain_.size() for inserting at the end
+    void insert_matrix(Matrix<T> matr, size_t pos);
+    
+    void compute_optimal_trace();
+};
+
+template<typename T>
+const Matrix<T>& Matrix_Chain<T>::ret_matrix(size_t number) const {
+    if(number >= chain_.size())
+        throw std::invalid_argument("Matrix_chain: no matrix with this number");
+
+    return chain_[number];
+}
+
+template<typename T>
+void Matrix_Chain<T>::insert_matrix(Matrix<T> matr, size_t pos) {
+    if(pos > chain_.size())
+        throw std::invalid_argument("Matrix_chain: can't be added matrix at this pos");
+
+    if(pos != 0) {
+        if(chain_[pos - 1].row_size() != matr.column_size()) {
+            throw std::invalid_argument("Matrix_chain: invalid inserting matrix size");
+        }
+    }
+
+    if(pos != chain_.size()) {
+        if(chain_[pos].column_size() != matr.row_size()) {
+            throw std::invalid_argument("Matrix_chain: invalid inserting matrix size");
+        }
+    }
+
+    chain_.insert(chain_.begin() + pos, std::move(matr));
+}
+
+template<typename T>
+void Matrix_Chain<T>::compute_optimal_trace() {
+    
+}
+
+} //namespace matrix

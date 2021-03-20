@@ -9,4 +9,6 @@ add_subdirectory(Matrix)
 
 include_directories(mem_storage dynamic_array)
 
-add_executable(matrix_mult main.cpp matrix)
+add_executable(matrix_mult main.cpp)
+
+target_link_libraries(matrix_mult Matrix)
