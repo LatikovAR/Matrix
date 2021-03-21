@@ -5,6 +5,7 @@
 #include "Matrix/matrix_chain_test.h"
 
 int main() {
-    matrix_test::add_test();
+    //matrix_test::add_test();
+    matrix_test::trace_test();
     return 0;
 }
