@@ -41,14 +41,10 @@ class Symmetric_Matrix;
 
 template <typename T>
 class Square_Matrix final :
-        public Abstract_Matrix<T>,
-        protected mem_storage::Matrix_Storage<T>
+        public Abstract_Matrix<T>
 {
 private:
-    const size_t& size_ = mem_storage::Matrix_Storage<T>::column_size_;
-    using mem_storage::Matrix_Storage<T>::data_;
-    using mem_storage::Matrix_Storage<T>::used_;
-    using mem_storage::Matrix_Storage<T>::swap;
+    mem_storage::Matrix_Storage<T> data_;
 
     using Abstract_Matrix<T>::is_match;
 
@@ -59,6 +55,9 @@ public:
 
     Square_Matrix(const Square_Matrix& rhs);
 
+    Square_Matrix(Square_Matrix&& rhs) noexcept:
+        data_{std::move(rhs.data_)} {}
+
     explicit Square_Matrix(const Symmetric_Matrix<T>& rhs);
 
     Square_Matrix(size_t size = 0);
@@ -67,21 +66,21 @@ public:
 
     Square_Matrix& operator= (const Square_Matrix& rhs)&;
 
-    void transpose() const;
+    void transpose();
 
-    void add_row_to_row(size_t src_num, size_t dst_num) const;
+    void add_row_to_row(size_t src_num, size_t dst_num);
 
-    void sub_row_to_row(size_t src_num, size_t dst_num, T koef = static_cast<T>(1)) const;
+    void sub_row_to_row(size_t src_num, size_t dst_num, T koef = static_cast<T>(1));
 
-    void swap_rows(size_t row1_num, size_t row2_num) const;
+    void swap_rows(size_t row1_num, size_t row2_num) ;
 
-    void mult_row_on_number(size_t row_num, T number) const;
+    void mult_row_on_number(size_t row_num, T number);
 
     const T& operator()(size_t row_i, size_t column_i) const override;
 
     T& operator()(size_t row_i, size_t column_i);
 
-    size_t size() const { return size_; }
+    size_t size() const { return data_.column_size(); }
 
     bool operator==(const Abstract_Matrix<T>& inp_rhs) const override;
 
@@ -99,14 +98,10 @@ public:
 
 template <typename T>
 class Symmetric_Matrix final :
-        public Abstract_Matrix<T>,
-        protected mem_storage::Symmetric_Matrix_Storage<T>
+        public Abstract_Matrix<T>
 {
 private:
-    const size_t& size_ = mem_storage::Symmetric_Matrix_Storage<T>::size_;
-    using mem_storage::Symmetric_Matrix_Storage<T>::data_;
-    using mem_storage::Symmetric_Matrix_Storage<T>::used_;
-    using mem_storage::Symmetric_Matrix_Storage<T>::swap;
+    mem_storage::Symmetric_Matrix_Storage<T> data_;
 
     using Abstract_Matrix<T>::is_match;
 
@@ -114,6 +109,9 @@ public:
     Symmetric_Matrix(size_t size = 0);
 
     Symmetric_Matrix(const Symmetric_Matrix& rhs);
+
+    Symmetric_Matrix(Symmetric_Matrix&& rhs) noexcept:
+        data_{std::move(rhs.data_)} {}
 
     Symmetric_Matrix& operator= (const Symmetric_Matrix& rhs)&;
 
@@ -123,7 +121,7 @@ public:
 
     T& operator()(size_t row_i, size_t column_i);
 
-    size_t size() const { return size_; }
+    size_t size() const { return data_.size(); }
 
     bool operator==(const Abstract_Matrix<T>& inp_rhs) const override;
 
@@ -139,19 +137,14 @@ public:
 
 template <typename T>
 class Matrix final :
-        public Abstract_Matrix<T>,
-        protected mem_storage::Matrix_Storage<T>
+        public Abstract_Matrix<T>
 {
 private:
-    using mem_storage::Matrix_Storage<T>::column_size_;
-    using mem_storage::Matrix_Storage<T>::row_size_;
-    using mem_storage::Matrix_Storage<T>::data_;
-    using mem_storage::Matrix_Storage<T>::used_;
-    using mem_storage::Matrix_Storage<T>::swap;
+    mem_storage::Matrix_Storage<T> data_;
 
     using Abstract_Matrix<T>::is_match;
 public:
-    Matrix() {}
+    Matrix() = default;
 
     //matrix elems should be contained in inp_data row by row
     Matrix(const T *const *data, size_t column_size, size_t row_size);
@@ -159,6 +152,9 @@ public:
     Matrix(const std::vector<std::vector<T>>& input_rows);
 
     Matrix(const Matrix& rhs);
+
+    Matrix(Matrix&& rhs) noexcept:
+        data_{std::move(rhs.data_)} {}
 
     Matrix(size_t column_size, size_t row_size);
 
@@ -172,20 +168,20 @@ public:
 
     void transpose();
 
-    void add_row_to_row(size_t src_num, size_t dst_num) const;
+    void add_row_to_row(size_t src_num, size_t dst_num);
 
-    void sub_row_to_row(size_t src_num, size_t dst_num, T koef = static_cast<T>(1)) const;
+    void sub_row_to_row(size_t src_num, size_t dst_num, T koef = static_cast<T>(1));
 
-    void swap_rows(size_t row1_num, size_t row2_num) const;
+    void swap_rows(size_t row1_num, size_t row2_num);
 
-    void mult_row_on_number(size_t row_num, T number) const;
+    void mult_row_on_number(size_t row_num, T number);
 
     const T& operator()(size_t row_i, size_t column_i) const override;
 
     T& operator()(size_t row_i, size_t column_i);
 
-    size_t row_size() const { return row_size_; }
-    size_t column_size() const { return column_size_; }
+    size_t row_size() const { return data_.row_size(); }
+    size_t column_size() const { return data_.column_size(); }
 
     bool operator==(const Abstract_Matrix<T>& inp_rhs) const override;
 
@@ -196,6 +192,8 @@ public:
     Matrix& operator*=(const Matrix<T>& rhs)&;
 
     void print() const override;
+
+    void swap(Matrix& rhs) { data_.swap(rhs.data_); }
 };
 
 
@@ -242,66 +240,68 @@ public:
 
 template<typename T>
 Square_Matrix<T>::Square_Matrix(const T *const *data, size_t size):
-    mem_storage::Matrix_Storage<T>(size, size)
+    data_(size, size)
 {
-    for(size_t i = 0; i < size_; ++i) {
-        for(size_t j = 0; j < size_; ++j) {
+    for(size_t i = 0; i < size; ++i) {
+        for(size_t j = 0; j < size; ++j) {
             new (&(data_[i][j])) T(data[i][j]);
-            ++used_;
+            data_.used()++;
         }
     }
 }
 
 template<typename T>
 Square_Matrix<T>::Square_Matrix(const std::vector<std::vector<T>>& input_rows):
-    mem_storage::Matrix_Storage<T>(input_rows.size(), input_rows.size())
+    data_(input_rows.size(), input_rows.size())
 {
+    size_t size = input_rows.size();
     for(const std::vector<T> &row : input_rows) {
-        if(row.size() != size_)
+        if(row.size() != size)
             throw std::invalid_argument
                 ("Constructing matrix from non-suitable std::vector<std::vector<T>>");
     }
 
-    for(size_t i = 0; i < size_; ++i) {
-        for(size_t j = 0; j < size_; ++j) {
-            new (&(data_[i][j])) T(input_rows[i][j]);
-            ++used_;
+    for(size_t i = 0; i < size; ++i) {
+        for(size_t j = 0; j < size; ++j) {
+            new (&(data_(i, j))) T(input_rows[i][j]);
+            data_.used()++;
         }
     }
 }
 
 template<typename T>
 Square_Matrix<T>::Square_Matrix(const Square_Matrix& rhs):
-    mem_storage::Matrix_Storage<T>(rhs.size(), rhs.size())
+    data_(rhs.size(), rhs.size())
 {
-    for(size_t i = 0; i < size_; ++i) {
-        for(size_t j = 0; j < size_; ++j) {
-            new (&(data_[i][j])) T(rhs(i, j));
-            ++used_;
+    for(size_t i = 0; i < rhs.size(); ++i) {
+        for(size_t j = 0; j < rhs.size(); ++j) {
+            new (&(data_(i, j))) T(rhs(i, j));
+            data_.used()++;
         }
     }
 }
 
+
 template<typename T>
 Square_Matrix<T>::Square_Matrix(const Symmetric_Matrix<T>& rhs):
-    mem_storage::Matrix_Storage<T>(rhs.size(), rhs.size())
+    data_(rhs.size(), rhs.size())
 {
-    for(size_t i = 0; i < size_; ++i) {
-        for(size_t j = 0; j < size_; ++j) {
-            new (&(data_[i][j])) T(rhs(i, j));
-            ++used_;
+    for(size_t i = 0; i < rhs.size(); ++i) {
+        for(size_t j = 0; j < rhs.size(); ++j) {
+            new (&(data_(i, j))) T(rhs(i, j));
+            data_.used()++;
         }
     }
 }
 
 template<typename T>
 Square_Matrix<T>::Square_Matrix(size_t size):
-    mem_storage::Matrix_Storage<T>(size, size)
+    data_(size, size)
 {
-    for(size_t i = 0; i < size_; ++i) {
-        for(size_t j = 0; j < size_; ++j) {
-           new (&(data_[i][j])) T();
-            ++used_;
+    for(size_t i = 0; i < size; ++i) {
+        for(size_t j = 0; j < size; ++j) {
+            new (&(data_(i, j))) T();
+            data_.used()++;
         }
     }
 }
@@ -316,73 +316,73 @@ Square_Matrix<T>& Square_Matrix<T>::operator= (const Square_Matrix<T>& rhs)& {
 template<typename T>
 template<typename U>
 Square_Matrix<T>::Square_Matrix(const Square_Matrix<U>& rhs):
-    mem_storage::Matrix_Storage<T>(rhs.size(), rhs.size())
+    data_(rhs.size(), rhs.size())
 {
-    for(size_t i = 0; i < size_; ++i) {
-        for(size_t j = 0; j < size_; ++j) {
-            new (&(data_[i][j])) T(static_cast<T>(rhs(i, j)));
-            ++used_;
+    for(size_t i = 0; i < rhs.size(); ++i) {
+        for(size_t j = 0; j < rhs.size(); ++j) {
+            new (&(data_(i, j))) T(static_cast<T>(rhs(i, j)));
+            data_.used()++;
         }
     }
 }
 
 template<typename T>
-void Square_Matrix<T>::transpose() const {
-    for(size_t i = 0; i < size_; ++i) {
+void Square_Matrix<T>::transpose() {
+    for(size_t i = 0; i < size(); ++i) {
         for(size_t j = 0; j < i; ++j) {
-            std::swap(data_[i][j], data_[j][i]);
+            std::swap(data_(i, j), data_(j, i));
         }
     }
 }
 
 template<typename T>
-void Square_Matrix<T>::add_row_to_row(size_t src_num, size_t dst_num) const {
-    if((src_num >= size_) || (dst_num >= size_))
+void Square_Matrix<T>::add_row_to_row(size_t src_num, size_t dst_num) {
+    if((src_num >= size()) || (dst_num >= size()))
         throw std::out_of_range("invalid matrix row number");
 
-    for(size_t i = 0; i < size_; ++i) {
-        data_[dst_num][i] += data_[src_num][i];
+    for(size_t i = 0; i < size(); ++i) {
+        data_(dst_num, i) += data_(src_num, i);
     }
 }
 
 template<typename T>
-void Square_Matrix<T>::sub_row_to_row(size_t src_num, size_t dst_num, T koef) const {
-    if((src_num >= size_) || (dst_num >= size_))
+void Square_Matrix<T>::sub_row_to_row(size_t src_num, size_t dst_num, T koef) {
+    if((src_num >= size()) || (dst_num >= size()))
         throw std::out_of_range("invalid matrix row number");
 
-    for(size_t i = 0; i < size_; ++i) {
-        data_[dst_num][i] -= (data_[src_num][i] * koef);
+    for(size_t i = 0; i < size(); ++i) {
+        data_(dst_num, i) -= (data_(src_num, i) * koef);
     }
 }
 
 template<typename T>
-void Square_Matrix<T>::swap_rows(size_t row1_num, size_t row2_num) const {
-    if((row1_num >= size_) || (row2_num >= size_))
+void Square_Matrix<T>::swap_rows(size_t row1_num, size_t row2_num) {
+    if((row1_num >= size()) || (row2_num >= size()))
         throw std::out_of_range("invalid matrix row number");
-    std::swap(data_[row1_num], data_[row2_num]);
+    std::swap(data_(row1_num), data_(row2_num));
 }
 
 template<typename T>
-void Square_Matrix<T>::mult_row_on_number(size_t row_num, T number) const {
-    if(row_num >= size_)
+void Square_Matrix<T>::mult_row_on_number(size_t row_num, T number) {
+    if(row_num >= size())
         throw std::out_of_range("invalid matrix row number");
-    for(size_t i = 0; i < size_; ++i) {
-        data_[row_num][i] *= number;
+    for(size_t i = 0; i < size(); ++i) {
+        data_(row_num, i) *= number;
     }
 }
 
 template<typename T>
 const T& Square_Matrix<T>::operator()(size_t row_num, size_t column_num) const {
-    if((row_num >= size_) || (column_num >= size_))
+    if((row_num >= size()) || (column_num >= size()))
         throw std::out_of_range("invalid matrix elem");
-    return data_[row_num][column_num];
+    return data_(row_num, column_num);
 }
 
 template<typename T>
 T& Square_Matrix<T>::operator()(size_t row_num, size_t column_num) {
-    if((row_num >= size_) || (column_num >= size_))
+    if((row_num >= size()) || (column_num >= size()))
         throw std::out_of_range("invalid matrix elem");
-    return data_[row_num][column_num];
+    return data_(row_num, column_num);
 }
 
 template<typename T>
@@ -391,11 +391,11 @@ bool Square_Matrix<T>::operator==(const Abstract_Matrix<T>& inp_rhs) const {
 
     const Square_Matrix<T>& rhs = static_cast<const Square_Matrix&>(inp_rhs);
 
-    if(size_ != rhs.size()) return false;
+    if(size() != rhs.size()) return false;
 
-    for(size_t i = 0; i < size_; ++i) {
-        for(size_t j = 0; j < size_; ++j) {
-            if(!is_match(data_[i][j], rhs(i, j))) return false;
+    for(size_t i = 0; i < size(); ++i) {
+        for(size_t j = 0; j < size(); ++j) {
+            if(!is_match(data_(i, j), rhs(i, j))) return false;
         }
     }
 
@@ -404,11 +404,11 @@ bool Square_Matrix<T>::operator==(const Abstract_Matrix<T>& inp_rhs) const {
 
 template<typename T>
 Square_Matrix<T>& Square_Matrix<T>::operator+=(const Square_Matrix<T>& rhs)& {
-    if(size_ != rhs.size_)
+    if(size() != rhs.size())
         throw std::invalid_argument("invalid matrices' sizes for +");
-    for(size_t i = 0; i < size_; ++i) {
-        for(size_t j = 0; j < size_; ++j) {
-            data_[i][j] += rhs(i, j);
+    for(size_t i = 0; i < size(); ++i) {
+        for(size_t j = 0; j < size(); ++j) {
+            data_(i, j) += rhs(i, j);
         }
     }
     return *this;
@@ -416,11 +416,11 @@ Square_Matrix<T>& Square_Matrix<T>::operator+=(const Square_Matrix<T>& rhs)& {
 
 template<typename T>
 Square_Matrix<T>& Square_Matrix<T>::operator-=(const Square_Matrix<T>& rhs)& {
-    if(size_ != rhs.size_)
+    if(size() != rhs.size())
         throw std::invalid_argument("invalid matrices' sizes for -");
-    for(size_t i = 0; i < size_; ++i) {
-        for(size_t j = 0; j < size_; ++j) {
-            data_[i][j] -= rhs(i, j);
+    for(size_t i = 0; i < size(); ++i) {
+        for(size_t j = 0; j < size(); ++j) {
+            data_(i, j) -= rhs(i, j);
         }
     }
     return *this;
@@ -428,32 +428,32 @@ Square_Matrix<T>& Square_Matrix<T>::operator-=(const Square_Matrix<T>& rhs)& {
 
 template<typename T>
 Square_Matrix<T>& Square_Matrix<T>::operator*=(const Square_Matrix<T>& rhs)& { //naive algorithm (almost)
-    if(size_ != rhs.size_)
+    if(size() != rhs.size())
         throw std::invalid_argument("invalid matrices' sizes for *");
-    if(size_ == 0) return *this;
+    if(size() == 0) return *this;
 
-    Square_Matrix<T> res_tmp(size_);
+    Square_Matrix<T> res_tmp(size());
     Square_Matrix rhs_copy(rhs);
     rhs_copy.transpose(); //for cache friendly
 
-    for(size_t i = 0; i < size_; ++i) {
-        for(size_t j = 0; j < size_; ++j) {
+    for(size_t i = 0; i < size(); ++i) {
+        for(size_t j = 0; j < size(); ++j) {
             res_tmp(i, j) = 0;
-            for(size_t k = 0; k < size_; ++k) {
-                res_tmp(i, j) += (data_[i][k] * rhs_copy(j, k));
+            for(size_t k = 0; k < size(); ++k) {
+                res_tmp(i, j) += (data_(i, k) * rhs_copy(j, k));
             }
         }
     }
 
-    swap(res_tmp);
+    data_.swap(res_tmp.data_);
     return *this;
 }
 
 template<typename T>
 void Square_Matrix<T>::print() const {
-    for(size_t i = 0; i < size_; ++i) {
-        for(size_t j = 0; j < size_; ++j) {
-            std::cout << data_[i][j] << " ";
+    for(size_t i = 0; i < size(); ++i) {
+        for(size_t j = 0; j < size(); ++j) {
+            std::cout << data_(i, j) << " ";
         }
         std::cout << std::endl;
     }
@@ -496,24 +496,24 @@ long long int Square_Matrix<long long int>::determinant() const;
 
 template<typename T>
 Symmetric_Matrix<T>::Symmetric_Matrix(const Symmetric_Matrix& rhs):
-    mem_storage::Symmetric_Matrix_Storage<T>(rhs.size())
+    data_(rhs.size())
 {
-    for(size_t i = 0; i < size_; ++i) {
+    for(size_t i = 0; i < size(); ++i) {
         for(size_t j = 0; j < (i + 1); ++j) {
-            new(&(data_[i][j])) T(rhs(i, j));
-            ++used_;
+            new(&(data_(i, j))) T(rhs(i, j));
+            data_.used()++;
         }
     }
 }
 
 template<typename T>
 Symmetric_Matrix<T>::Symmetric_Matrix(size_t size):
-    mem_storage::Symmetric_Matrix_Storage<T>(size)
+    data_(size)
 {
-    for(size_t i = 0; i < size_; ++i) {
+    for(size_t i = 0; i < size; ++i) {
         for(size_t j = 0; j < (i + 1); ++j) {
-            new(&(data_[i][j])) T();
-            ++used_;
+            new(&(data_(i, j))) T();
+            data_.used()++;
         }
     }
 }
@@ -528,32 +528,30 @@ Symmetric_Matrix<T>& Symmetric_Matrix<T>::operator= (const Symmetric_Matrix<T>& 
 template<typename T>
 template<typename U>
 Symmetric_Matrix<T>::Symmetric_Matrix(const Symmetric_Matrix<U>& rhs):
-    mem_storage::Symmetric_Matrix_Storage<T>(rhs.size())
+    data_(rhs.size())
 {
-    for(size_t i = 0; i < size_; ++i) {
+    for(size_t i = 0; i < size(); ++i) {
         for(size_t j = 0; j < (i + 1); ++j) {
-            new (&(data_[i][j])) T(static_cast<T>(rhs(i, j)));
-            ++used_;
+            new (&(data_(i, j))) T(static_cast<T>(rhs(i, j)));
+            data_.used()++;
         }
     }
 }
 
 template<typename T>
 const T& Symmetric_Matrix<T>::operator()(size_t row_num, size_t column_num) const {
-    if((row_num >= size_) || (column_num >= size_))
+    if((row_num >= size()) || (column_num >= size()))
         throw std::out_of_range("invalid matrix elem");
 
-    if(row_num >= column_num) return data_[row_num][column_num];
-    return data_[column_num][row_num];
+    return data_(row_num, column_num);
 }
 
 template<typename T>
 T& Symmetric_Matrix<T>::operator()(size_t row_num, size_t column_num) {
-    if((row_num >= size_) || (column_num >= size_))
+    if((row_num >= size()) || (column_num >= size()))
         throw std::out_of_range("invalid matrix elem");
 
-    if(row_num >= column_num) return data_[row_num][column_num];
-    return data_[column_num][row_num];
+    return data_(row_num, column_num);
 }
 
 template<typename T>
@@ -562,11 +560,11 @@ bool Symmetric_Matrix<T>::operator==(const Abstract_Matrix<T>& inp_rhs) const {
 
     const Symmetric_Matrix<T>& rhs = static_cast<const Symmetric_Matrix&>(inp_rhs);
 
-    if(size_ != rhs.size()) return false;
+    if(size() != rhs.size()) return false;
 
-    for(size_t i = 0; i < size_; ++i) {
+    for(size_t i = 0; i < size(); ++i) {
         for(size_t j = 0; j < (i + 1); ++j) {
-            if(!is_match(data_[i][j], rhs(i, j))) return false;
+            if(!is_match(data_(i, j), rhs(i, j))) return false;
         }
     }
 
@@ -575,12 +573,12 @@ bool Symmetric_Matrix<T>::operator==(const Abstract_Matrix<T>& inp_rhs) const {
 
 template<typename T>
 Symmetric_Matrix<T>& Symmetric_Matrix<T>::operator+=(const Symmetric_Matrix<T>& rhs)& {
-    if(size_ != rhs.size_)
+    if(size() != rhs.size())
         throw std::invalid_argument("invalid matrices' sizes for +");
 
-    for(size_t i = 0; i < size_; ++i) {
+    for(size_t i = 0; i < size(); ++i) {
         for(size_t j = 0; j < (i + 1); ++j) {
-            data_[i][j] += rhs(i, j);
+            data_(i, j) += rhs(i, j);
         }
     }
     return *this;
@@ -588,12 +586,12 @@ Symmetric_Matrix<T>& Symmetric_Matrix<T>::operator+=(const Symmetric_Matrix<T>& 
 
 template<typename T>
 Symmetric_Matrix<T>& Symmetric_Matrix<T>::operator-=(const Symmetric_Matrix<T>& rhs)& {
-    if(size_ != rhs.size_)
+    if(size() != rhs.size())
         throw std::invalid_argument("invalid matrices' sizes for -");
 
-    for(size_t i = 0; i < size_; ++i) {
+    for(size_t i = 0; i < size(); ++i) {
         for(size_t j = 0; j < (i + 1); ++j) {
-            data_[i][j] -= rhs(i, j);
+            data_(i, j) -= rhs(i, j);
         }
     }
     return *this;
@@ -601,8 +599,8 @@ Symmetric_Matrix<T>& Symmetric_Matrix<T>::operator-=(const Symmetric_Matrix<T>& 
 
 template<typename T>
 void Symmetric_Matrix<T>::print() const {
-    for(size_t i = 0; i < size_; ++i) {
-        for(size_t j = 0; j < size_; ++j) {
+    for(size_t i = 0; i < size(); ++i) {
+        for(size_t j = 0; j < size(); ++j) {
             std::cout << operator()(i, j) << " ";
         }
         std::cout << std::endl;
@@ -645,55 +643,55 @@ long long int Symmetric_Matrix<long long int>::determinant() const;
 
 template<typename T>
 Matrix<T>::Matrix(const T *const *data, size_t column_size, size_t row_size):
-    mem_storage::Matrix_Storage<T>(column_size, row_size)
+    data_(column_size, row_size)
 {
-    for(size_t i = 0; i < column_size_; ++i) {
-        for(size_t j = 0; j < row_size_; ++j) {
-            new (&(data_[i][j])) T(data[i][j]);
-            ++used_;
+    for(size_t i = 0; i < column_size; ++i) {
+        for(size_t j = 0; j < row_size; ++j) {
+            new (&(data_(i, j))) T(data[i][j]);
+            data_.used()++;
         }
     }
 }
 
 template<typename T>
 Matrix<T>::Matrix(const std::vector<std::vector<T>>& input_rows):
-    mem_storage::Matrix_Storage<T>(
+    data_(
         input_rows.size(),
         (input_rows.size() > 0) ? input_rows[0].size() : 0)
 {
     for(const std::vector<T> &row : input_rows) {
-        if(row.size() != row_size_)
+        if(row.size() != row_size())
             throw std::invalid_argument("Constructing matrix from non-suitable std::vector<std::vector<T>>");
     }
 
-    for(size_t i = 0; i < column_size_; ++i) {
-        for(size_t j = 0; j < row_size_; ++j) {
-            new (&(data_[i][j])) T(input_rows[i][j]);
-            ++used_;
+    for(size_t i = 0; i < column_size(); ++i) {
+        for(size_t j = 0; j < row_size(); ++j) {
+            new (&(data_(i, j))) T(input_rows[i][j]);
+            data_.used()++;
         }
     }
 }
 
 template<typename T>
 Matrix<T>::Matrix(const Matrix& rhs):
-    mem_storage::Matrix_Storage<T>(rhs.column_size(), rhs.row_size())
+    data_(rhs.column_size(), rhs.row_size())
 {
-    for(size_t i = 0; i < column_size_; ++i) {
-        for(size_t j = 0; j < row_size_; ++j) {
-            new (&(data_[i][j])) T(rhs(i, j));
-            ++used_;
+    for(size_t i = 0; i < column_size(); ++i) {
+        for(size_t j = 0; j < row_size(); ++j) {
+            new (&(data_(i, j))) T(rhs(i, j));
+            data_.used()++;
         }
     }
 }
 
 template<typename T>
 Matrix<T>::Matrix(size_t column_size, size_t row_size):
-    mem_storage::Matrix_Storage<T>(column_size, row_size)
+    data_(column_size, row_size)
 {
-    for(size_t i = 0; i < column_size_; ++i) {
-        for(size_t j = 0; j < row_size_; ++j) {
-            new (&(data_[i][j])) T();
-            ++used_;
+    for(size_t i = 0; i < column_size; ++i) {
+        for(size_t j = 0; j < row_size; ++j) {
+            new (&(data_(i, j))) T();
+            data_.used()++;
         }
     }
 }
@@ -709,47 +707,47 @@ Matrix<T>& Matrix<T>::operator= (const Matrix<T>& rhs)& {
 template<typename T>
 template<typename U>
 Matrix<T>::Matrix(const Matrix<U>& rhs):
-    mem_storage::Matrix_Storage<T>(rhs.column_size(), rhs.row_size())
+    data_(rhs.column_size(), rhs.row_size())
 {
-    for(size_t i = 0; i < column_size_; ++i) {
-        for(size_t j = 0; j < row_size_; ++j) {
-            new (&(data_[i][j])) T(static_cast<T>(rhs(i, j)));
-            ++used_;
+    for(size_t i = 0; i < column_size(); ++i) {
+        for(size_t j = 0; j < row_size(); ++j) {
+            new (&(data_(i, j))) T(static_cast<T>(rhs(i, j)));
+            data_.used()++;
         }
     }
 }
 
 template<typename T>
 Matrix<T>::Matrix(const Square_Matrix<T>& rhs):
-    mem_storage::Matrix_Storage<T>(rhs.size(), rhs.size())
+    data_(rhs.size(), rhs.size())
 {
-    for(size_t i = 0; i < column_size_; ++i) {
-        for(size_t j = 0; j < row_size_; ++j) {
-            new (&(data_[i][j])) T(rhs(i, j));
-            ++used_;
+    for(size_t i = 0; i < column_size(); ++i) {
+        for(size_t j = 0; j < row_size(); ++j) {
+            new (&(data_(i, j))) T(rhs(i, j));
+            data_.used()++;
         }
     }
 }
 
 template<typename T>
 Matrix<T>::Matrix(const Symmetric_Matrix<T>& rhs):
-    mem_storage::Matrix_Storage<T>(rhs.size(), rhs.size())
+    data_(rhs.size(), rhs.size())
 {
-    for(size_t i = 0; i < column_size_; ++i) {
-        for(size_t j = 0; j < row_size_; ++j) {
-            new (&(data_[i][j])) T(rhs(i, j));
-            ++used_;
+    for(size_t i = 0; i < column_size(); ++i) {
+        for(size_t j = 0; j < row_size(); ++j) {
+            new (&(data_(i, j))) T(rhs(i, j));
+            data_.used()++;
         }
     }
 }
 
 template<typename T>
 void Matrix<T>::transpose() {
-    Matrix<T> tmp(row_size_, column_size_);
+    Matrix<T> tmp(row_size(), column_size());
 
-    for(size_t i = 0; i < column_size_; ++i) {
-        for(size_t j = 0; j < row_size_; ++j) {
-            tmp(j, i) = data_[i][j];
+    for(size_t i = 0; i < column_size(); ++i) {
+        for(size_t j = 0; j < row_size(); ++j) {
+            tmp(j, i) = data_(i, j);
         }
     }
 
@@ -757,53 +755,53 @@ void Matrix<T>::transpose() {
 }
 
 template<typename T>
-void Matrix<T>::add_row_to_row(size_t src_num, size_t dst_num) const {
-    if((src_num >= column_size_) || (dst_num >= column_size_))
+void Matrix<T>::add_row_to_row(size_t src_num, size_t dst_num) {
+    if((src_num >= column_size()) || (dst_num >= column_size()))
         throw std::out_of_range("invalid matrix row number");
 
-    for(size_t i = 0; i < row_size_; ++i) {
-        data_[dst_num][i] += data_[src_num][i];
+    for(size_t i = 0; i < row_size(); ++i) {
+        data_(dst_num, i) += data_(src_num, i);
     }
 }
 
 template<typename T>
-void Matrix<T>::sub_row_to_row(size_t src_num, size_t dst_num, T koef) const {
-    if((src_num >= column_size_) || (dst_num >= column_size_))
+void Matrix<T>::sub_row_to_row(size_t src_num, size_t dst_num, T koef) {
+    if((src_num >= column_size()) || (dst_num >= column_size()))
         throw std::out_of_range("invalid matrix row number");
 
-    for(size_t i = 0; i < row_size_; ++i) {
-        data_[dst_num][i] -= (data_[src_num][i] * koef);
+    for(size_t i = 0; i < row_size(); ++i) {
+        data_(dst_num, i) -= (data_(src_num, i) * koef);
     }
 }
 
 template<typename T>
-void Matrix<T>::swap_rows(size_t row1_num, size_t row2_num) const {
-    if((row1_num >= column_size_) || (row2_num >= column_size_))
+void Matrix<T>::swap_rows(size_t row1_num, size_t row2_num) {
+    if((row1_num >= column_size()) || (row2_num >= column_size()))
         throw std::out_of_range("invalid matrix row number");
-    std::swap(data_[row1_num], data_[row2_num]);
+    std::swap(data_(row1_num), data_(row2_num));
 }
 
 template<typename T>
-void Matrix<T>::mult_row_on_number(size_t row_num, T number) const {
-    if(row_num >= column_size_)
+void Matrix<T>::mult_row_on_number(size_t row_num, T number) {
+    if(row_num >= column_size())
         throw std::out_of_range("invalid matrix row number");
-    for(size_t i = 0; i < row_size_; ++i) {
-        data_[row_num][i] *= number;
+    for(size_t i = 0; i < row_size(); ++i) {
+        data_(row_num, i) *= number;
     }
 }
 
 template<typename T>
 const T& Matrix<T>::operator()(size_t column_i, size_t row_i) const {
-    if((column_i >= column_size_) || (row_i >= row_size_))
+    if((column_i >= column_size()) || (row_i >= row_size()))
         throw std::out_of_range("invalid matrix elem");
-    return data_[column_i][row_i];
+    return data_(column_i, row_i);
 }
 
 template<typename T>
 T& Matrix<T>::operator()(size_t column_i, size_t row_i) {
-    if((column_i >= column_size_) || (row_i >= row_size_))
+    if((column_i >= column_size()) || (row_i >= row_size()))
         throw std::out_of_range("invalid matrix elem");
-    return data_[column_i][row_i];
+    return data_(column_i, row_i);
 }
 
 template<typename T>
@@ -812,11 +810,11 @@ bool Matrix<T>::operator==(const Abstract_Matrix<T>& inp_rhs) const {
 
     const Matrix<T>& rhs = static_cast<const Matrix&>(inp_rhs);
 
-    if((row_size_ != rhs.row_size()) || (column_size_ != rhs.column_size())) return false;
+    if((row_size() != rhs.row_size()) || (column_size() != rhs.column_size())) return false;
 
-    for(size_t i = 0; i < column_size_; ++i) {
-        for(size_t j = 0; j < row_size_; ++j) {
-            if(!is_match(data_[i][j], rhs(i, j))) return false;
+    for(size_t i = 0; i < column_size(); ++i) {
+        for(size_t j = 0; j < row_size(); ++j) {
+            if(!is_match(data_(i, j), rhs(i, j))) return false;
         }
     }
 
@@ -825,11 +823,11 @@ bool Matrix<T>::operator==(const Abstract_Matrix<T>& inp_rhs) const {
 
 template<typename T>
 Matrix<T>& Matrix<T>::operator+=(const Matrix<T>& rhs)& {
-    if((row_size_ != rhs.row_size()) || (column_size_ != rhs.column_size()))
+    if((row_size() != rhs.row_size()) || (column_size() != rhs.column_size()))
         throw std::invalid_argument("invalid matrices' sizes for +");
-    for(size_t i = 0; i < column_size_; ++i) {
-        for(size_t j = 0; j < row_size_; ++j) {
-            data_[i][j] += rhs(i, j);
+    for(size_t i = 0; i < column_size(); ++i) {
+        for(size_t j = 0; j < row_size(); ++j) {
+            data_(i, j) += rhs(i, j);
         }
     }
     return *this;
@@ -837,11 +835,11 @@ Matrix<T>& Matrix<T>::operator+=(const Matrix<T>& rhs)& {
 
 template<typename T>
 Matrix<T>& Matrix<T>::operator-=(const Matrix<T>& rhs)& {
-    if((row_size_ != rhs.row_size()) || (column_size_ != rhs.column_size()))
+    if((row_size() != rhs.row_size()) || (column_size() != rhs.column_size()))
         throw std::invalid_argument("invalid matrices' sizes for -");
-    for(size_t i = 0; i < column_size_; ++i) {
-        for(size_t j = 0; j < row_size_; ++j) {
-            data_[i][j] -= rhs(i, j);
+    for(size_t i = 0; i < column_size(); ++i) {
+        for(size_t j = 0; j < row_size(); ++j) {
+            data_(i, j) -= rhs(i, j);
         }
     }
     return *this;
@@ -849,26 +847,26 @@ Matrix<T>& Matrix<T>::operator-=(const Matrix<T>& rhs)& {
 
 template<typename T>
 Matrix<T>& Matrix<T>::operator*=(const Matrix<T>& rhs)& {
-    if(row_size_ != rhs.column_size())
+    if(row_size() != rhs.column_size())
         throw std::invalid_argument("invalid matrices' sizes for *");
 
-    if((row_size_ == 0) || (column_size_ == 0)) return *this;
+    if((row_size() == 0) || (column_size() == 0)) return *this;
 
     if(rhs.row_size() == 0) {
-        Matrix<T> tmp(column_size_, 0);
+        Matrix<T> tmp(column_size(), 0);
         swap(tmp);
         return *this;
     }
 
-    Matrix<T> res_tmp(column_size_, rhs.row_size());
+    Matrix<T> res_tmp(column_size(), rhs.row_size());
     Matrix<T> rhs_copy(rhs);
     rhs_copy.transpose(); //for cache friendly
 
-    for(size_t i = 0; i < column_size_; ++i) {
+    for(size_t i = 0; i < column_size(); ++i) {
         for(size_t j = 0; j < rhs_copy.column_size(); ++j) {
             res_tmp(i, j) = 0;
-            for(size_t k = 0; k < row_size_; ++k) {
-                res_tmp(i, j) += (data_[i][k] * rhs_copy(j, k));
+            for(size_t k = 0; k < row_size(); ++k) {
+                res_tmp(i, j) += (data_(i, k) * rhs_copy(j, k));
             }
         }
     }
@@ -879,9 +877,9 @@ Matrix<T>& Matrix<T>::operator*=(const Matrix<T>& rhs)& {
 
 template<typename T>
 void Matrix<T>::print() const {
-    for(size_t i = 0; i < column_size_; ++i) {
-        for(size_t j = 0; j < row_size_; ++j) {
-            std::cout << data_[i][j] << " ";
+    for(size_t i = 0; i < column_size(); ++i) {
+        for(size_t j = 0; j < row_size(); ++j) {
+            std::cout << data_(i, j) << " ";
         }
         std::cout << std::endl;
     }

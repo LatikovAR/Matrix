@@ -385,4 +385,4 @@ void matrix_test() {
     long_test(10);
 }
 
-}
+} //namespace matrix_tests

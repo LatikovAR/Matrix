@@ -1,6 +1,6 @@
 #pragma once
 
-namespace matrix_tests {
+namespace matrix_test {
 
 void unit_test0();
 void unit_test1();
@@ -23,4 +23,5 @@ void unit_test16();
 void long_test(int n_tests);
 
 void matrix_test();
-}
+
+} //namespace matrix_test
