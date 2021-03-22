@@ -113,6 +113,9 @@ public:
 
     static void print_optimal_trace_with_numbers(const std::vector<size_t>&);
     static void print_optimal_trace_with_brackets(const std::vector<size_t>&);
+
+    Matrix<T> mult_chain_optimal(const std::vector<size_t>& order) const;
+    Matrix<T> mult_chain_naive() const;
 };
 
 template<typename T>
@@ -216,7 +219,6 @@ void Matrix_Chain<T>::print_optimal_trace_with_numbers(const std::vector<size_t>
 
 template<typename T>
 void Matrix_Chain<T>::print_optimal_trace_with_brackets(const std::vector<size_t>& trace) {
-    //not best algorithm but no matter here
     std::map<size_t, std::string> output;
 
     for(size_t i = 0; i < trace.size() + 1; ++i) {
@@ -247,6 +249,52 @@ void Matrix_Chain<T>::print_optimal_trace_with_brackets(const std::vector<size_t
     auto it = output.find(trace.size());
 
     std::cout << it->second << std::endl;
+}
+
+template<typename T>
+Matrix<T> Matrix_Chain<T>::mult_chain_optimal(const std::vector<size_t>& order) const {
+    if(chain_.size() == 0)
+        throw std::runtime_error("Mult chain: no matrices");
+
+    if(order.size() + 1 != chain_.size())
+        throw std::runtime_error("Mult chain: not suitable order param");
+
+    std::map<size_t, Matrix<T>> expr;
+    for(size_t i = 0; i < chain_.size(); ++i) {
+        expr.emplace(i, chain_[i]);
+    }
+
+    for(const auto& mult_num : order) {
+
+        auto it1 = expr.find(mult_num);
+        if(it1 == expr.end())
+            throw std::runtime_error("Mult chain: not suitable order param");
+        auto it2 = it1;
+        it2++;
+        if(it1 == expr.end())
+            throw std::runtime_error("Mult chain: not suitable order param");
+
+        it2->second = it1->second * it2->second;
+        expr.erase(it1);
+    }
+
+    assert(expr.size() == 1);
+    auto it = expr.find(chain_.size() - 1);
+    assert(expr.end() != it);
+    return it->second;
+}
+
+template<typename T>
+Matrix<T> Matrix_Chain<T>::mult_chain_naive() const {
+    if(chain_.size() == 0)
+        throw std::runtime_error("Mult chain: no matrices");
+
+    Matrix<T> buf{chain_[0]};
+    for(size_t i = 1; i < chain_.size(); ++i) {
+        buf = buf * chain_[i];
+    }
+
+    return buf;
 }
 
 } //namespace matrix
