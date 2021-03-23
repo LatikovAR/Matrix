@@ -23,6 +23,14 @@ Matrix<int> input_matrix() {
     return m;
 }
 
+/*
+int main() {
+    matrix_test::add_test();
+    matrix_test::trace_test();
+    return 0;
+}*/
+
+
 int main() {
     //Matrix_Chain_Generator("test1.txt", 5);
 
@@ -38,6 +46,7 @@ int main() {
     auto start_time = std::chrono::high_resolution_clock::now();
 
     auto optimal_trace = chain.compute_optimal_trace();
+    //start_time = std::chrono::high_resolution_clock::now();
     Matrix<int> m1 = chain.mult_chain_optimal(optimal_trace);
 
     auto end_time = std::chrono::high_resolution_clock::now();

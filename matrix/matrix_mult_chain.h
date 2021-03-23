@@ -18,85 +18,41 @@ private:
     //Trace is a way of multiplication execution
     //contains numbers of "*" in some execution order
     class Trace final {
-
-        //-------------------TRACE_MEMORY----------------
         std::vector<size_t> op_order_; //operations order
         size_t weight_; //number of trivial "*" operations
 
-        //----------------FOR_CONTINUE_TRACE-------------
-        //not used operation nums in right order like keys
-        //matrix sizes around key operation like second param
-        //-1 key - first matrix column size
-        //last key - last matrix row size
-        std::map<int, size_t> unused_ops;
-
     public:
-        Trace(const std::vector<Matrix<T>>& chain): weight_(0) {
-            size_t op_num = chain.size() - 1;
-
-            op_order_.reserve(op_num);
-
-            unused_ops.emplace(-1, chain[0].column_size());
-            for(size_t i = 0; i < op_num; ++i) {
-                unused_ops.emplace(i, chain[i].row_size());
-            }
-            unused_ops.emplace(op_num, chain[op_num].row_size());
-        }
+        Trace(): weight_(0) {}
 
         std::vector<size_t> op_order() const { return op_order_; }
-
-        size_t weight() const { return weight_; }
-
-        void use_op(size_t op_num) {
-            const auto& op = unused_ops.find(op_num);
-
-            //no this op
-            if(op == unused_ops.end())
-                throw std::runtime_error("Trace: can't use operation with this num");
-            auto prev_op = op;
-            prev_op--;
-            auto next_op = op;
-            next_op++;
-
-            op_order_.push_back(op_num);
-
-            weight_ += (prev_op->second * op->second * next_op->second);
-
-            unused_ops.erase(op);
+        void write_op_order(std::vector<size_t> op_order) {
+            op_order_ = std::move(op_order);
         }
+        void push_op_num_back(size_t op_num) { op_order_.push_back(op_num); }
 
-        size_t predict_weight(size_t op_num) const {
-            const auto& op = unused_ops.find(op_num);
-
-            //no this op
-            if(op == unused_ops.end())
-                throw std::runtime_error("Trace: can't use operation with this num");
-            auto prev_op = op;
-            prev_op--;
-            auto next_op = op;
-            next_op++;
-
-            return weight_ + (prev_op->second * op->second * next_op->second);
-        }
+        size_t& weight() { return weight_; }
     };
 
     //inserting in vector isn't so fast as in list
     //but vector is better for elems access
     std::vector<Matrix<T>> chain_;
 
-    //trace_levels_ - vector with calculation traces of multiplication
-    //every level contains traces with the same length
-    //first level <=> length = 0
-    //std::map<std::set<size_t>, Trace> - map from one level traces
-    //Key = std::set<size_t> - consists of calculated "*" numbers
-    //for every Key stores the shortest trace
-    std::vector<std::map<std::set<size_t>, Trace>> traces_levels_;
+    //every bit in elem num performs used "*"
+    //00000000 = 0 - nothing used
+    //00000010 = 2 - used only second "*"
+    //00000110 = 6 - used third and second "*"
+    //11111111 - used all (answer here)
+    std::vector<Trace> traces_;
 
-    std::map<std::set<size_t>, Trace> optimal_trace_;
+    //num of using bits in traces numbers
+    size_t bit_length_;
+
+    //contains column sizes for all matrix in right order
+    //and last matrix row size at the end;
+    std::vector<size_t> matr_sizes;
 
     void make_first_trace_level();
-    void make_trace_level(std::map<std::set<size_t>, Trace>& new_level,
-                          const std::map<std::set<size_t>, Trace>& prev_level);
+    void make_trace_level(size_t i);
 public:
     Matrix_Chain() = default;
     ~Matrix_Chain() = default;
@@ -148,63 +104,95 @@ void Matrix_Chain<T>::insert_matrix(Matrix<T> matr, size_t pos) {
 
 template<typename T>
 std::vector<size_t> Matrix_Chain<T>::compute_optimal_trace() {
-    make_first_trace_level();
+    make_first_trace_level(); //only resize traces vector
 
-    for(size_t i = 1; i < chain_.size(); ++i) {
-        make_trace_level(traces_levels_[i], traces_levels_[i - 1]);
+    for(size_t i = 0; i < traces_.size() - 1; ++i) {
+        make_trace_level(i); //build all possible ways from this condition
     }
 
-    const auto& last_level = *traces_levels_.rbegin();
-    assert(last_level.size() == 1);
-    const Trace& final_trace = (*(last_level.begin())).second;
-    return final_trace.op_order();
+    auto last_elem = traces_.rbegin();
+    return last_elem->op_order();
 }
 
 template<typename T>
 void Matrix_Chain<T>::make_first_trace_level() {
-    traces_levels_.clear();
-    traces_levels_.resize(chain_.size());
+    traces_.clear();
 
-    auto& first_level = traces_levels_[0];
-    std::set<size_t> s;
-    Trace tr(chain_); //other traces will be built over this
-    first_level.emplace(std::move(s), std::move(tr));
+    size_t c_size = chain_.size() - 1;
+    bit_length_ = c_size;
+
+    //calculating 2^bit_length
+    size_t t_num = 1;
+    size_t multiplicator = 2;
+    while(c_size > 0) {
+        if(c_size % 2 == 0) {
+            multiplicator *= multiplicator;
+            c_size /= 2;
+        }
+        else {
+            t_num *= multiplicator;
+            c_size--;
+        }
+    }
+
+    traces_.resize(t_num);
+
+    matr_sizes.resize(chain_.size() + 1);
+    for(size_t i = 0; i < chain_.size(); ++i) {
+        matr_sizes[i] = chain_[i].column_size();
+    }
+    matr_sizes[chain_.size()] = chain_[chain_.size() - 1].row_size();
 }
 
 template<typename T>
-void Matrix_Chain<T>::make_trace_level(std::map<std::set<size_t>, Trace>& new_level,
-                                       const std::map<std::set<size_t>, Trace>& prev_level)
-{
-    new_level.clear();
+void Matrix_Chain<T>::make_trace_level(size_t cur_pos) {
+    size_t bot_size, mid_size, top_size;
+    size_t mid_num;
+    bool mid_found = false;
 
-    for(const auto& prev_elem : prev_level) {
-        const std::set<size_t>& prev_cond = prev_elem.first;
-        const Trace& prev_trace = prev_elem.second;
+    bot_size = matr_sizes[0];
+    for(size_t mult_num = 0; mult_num < bit_length_; ++mult_num) {
+        if((cur_pos >> mult_num) % 2 == 0) {
 
-        for(size_t mult_num = 0; mult_num < chain_.size() - 1; ++mult_num) {
-            if(prev_cond.count(mult_num) == 0) { //if this "*" wasn't used before
-                std::set<size_t> new_cond{prev_cond};
-                new_cond.insert(mult_num);
-
-                if(new_level.count(new_cond) == 0) {
-                    Trace new_trace{prev_trace};
-                    new_trace.use_op(mult_num);
-                    new_level.emplace(std::move(new_cond), std::move(new_trace));
-                }
-
-                else {
-                    assert(new_level.count(new_cond) == 1);
-
-                    Trace& op_trace = new_level.find(new_cond)->second;
-                    size_t new_weight = prev_trace.predict_weight(mult_num);
-
-                    if(op_trace.weight() > new_weight) {
-                        Trace new_trace{prev_trace};
-                        new_trace.use_op(mult_num);
-                        op_trace = std::move(new_trace);
-                    }
-                }
+            if(mid_found == false) {
+                mid_found = true;
+                mid_num = mult_num;
+                mid_size = matr_sizes[mult_num + 1];
             }
+
+            else {
+                top_size = matr_sizes[mult_num + 1];
+
+                size_t next_pos = cur_pos | (1 << mid_num);
+                size_t weight_inc = bot_size * mid_size * top_size;
+
+                if((traces_[next_pos].weight() == 0) ||
+                   (traces_[next_pos].weight() > traces_[cur_pos].weight() + weight_inc))
+                {
+                    traces_[next_pos].weight() = traces_[cur_pos].weight() + weight_inc;
+                    traces_[next_pos].write_op_order(std::move(traces_[cur_pos].op_order()));
+                    traces_[next_pos].push_op_num_back(mid_num);
+                }
+
+                bot_size = mid_size;
+                mid_size = top_size;
+                mid_num = mult_num;
+            }
+        }
+    }
+
+    if(mid_found == true) {
+        top_size = *matr_sizes.rbegin();
+
+        size_t next_pos = cur_pos | (1 << mid_num);
+        size_t weight_inc = bot_size * mid_size * top_size;
+
+        if((traces_[next_pos].weight() == 0) ||
+           (traces_[next_pos].weight() > traces_[cur_pos].weight() + weight_inc))
+        {
+            traces_[next_pos].weight() = traces_[cur_pos].weight() + weight_inc;
+            traces_[next_pos].write_op_order(std::move(traces_[cur_pos].op_order()));
+            traces_[next_pos].push_op_num_back(mid_num);
         }
     }
 }
