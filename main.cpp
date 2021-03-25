@@ -30,7 +30,7 @@ int main() {
     return 0;
 }*/
 
-
+/*
 int main() {
     //Matrix_Chain_Generator("test1.txt", 5);
 
@@ -71,6 +71,36 @@ int main() {
     assert(m1 == m2);
     std::cout << "optimal time = " << optimal_time << std::endl;
     std::cout << "naive time = " << naive_time << std::endl;
+
+    Matrix_Chain<int>::print_optimal_trace_with_brackets(optimal_trace);
+    return 0;
+}*/
+
+int main() {
+    Matrix_Chain<int> chain;
+
+    while(!std::cin.eof()) {
+        size_t column_size, row_size;
+        std::cin >> column_size >> row_size;
+
+        try {
+            chain.insert_matrix(matrix::Matrix<int>(column_size, row_size), chain.matrix_num());
+        }  catch (std::invalid_argument& e) {
+            std::cerr << e.what();
+            exit(-1);
+        }
+    }
+
+    auto start_time = std::chrono::high_resolution_clock::now();
+    auto optimal_trace = chain.compute_optimal_trace();
+    auto end_time = std::chrono::high_resolution_clock::now();
+
+    double optimal_time =
+            std::chrono::duration<double,
+            std::chrono::milliseconds::period>
+            (end_time - start_time).count();
+
+    std::cout << "optimal time = " << optimal_time << std::endl;
 
     Matrix_Chain<int>::print_optimal_trace_with_brackets(optimal_trace);
     return 0;

@@ -521,7 +521,7 @@ Symmetric_Matrix<T>::Symmetric_Matrix(size_t size):
 template<typename T>
 Symmetric_Matrix<T>& Symmetric_Matrix<T>::operator= (const Symmetric_Matrix<T>& rhs)& {
     Symmetric_Matrix<T> tmp(rhs);
-    swap(tmp);
+    data_.swap(tmp.data_);
     return *this;
 }
 
