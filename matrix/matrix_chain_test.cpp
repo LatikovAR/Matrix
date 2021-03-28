@@ -64,9 +64,9 @@ void trace_test() {
     matrix_chain.insert_matrix(m2, 0);
     matrix_chain.insert_matrix(m1, 0);
 
-    std::vector<size_t> trace = matrix_chain.compute_optimal_trace();
-    Matrix_Chain<int>::print_optimal_trace_with_numbers(trace);
-    Matrix_Chain<int>::print_optimal_trace_with_brackets(trace);
+    std::vector<size_t> order = matrix_chain.compute_optimal_trace().op_order();
+    Matrix_Chain<int>::print_optimal_trace_with_numbers(order);
+    Matrix_Chain<int>::print_optimal_trace_with_brackets(order);
 }
 
 } //namespace matrix

@@ -50,7 +50,7 @@ int main() {
 
     auto optimal_trace = chain.compute_optimal_trace();
     //start_time = std::chrono::high_resolution_clock::now();
-    Matrix<int> m1 = chain.mult_chain_optimal(optimal_trace);
+    Matrix<int> m1 = chain.mult_chain_optimal(optimal_trace.op_order());
 
     auto end_time = std::chrono::high_resolution_clock::now();
 
@@ -74,6 +74,10 @@ int main() {
     std::cout << "optimal time = " << optimal_time << std::endl;
     std::cout << "naive time = " << naive_time << std::endl;
 
-    Matrix_Chain<int>::print_optimal_trace_with_brackets(optimal_trace);
+    std::cout << "optimal * number = " << optimal_trace.weight << std::endl;
+    std::cout << "naive * number = " << chain.naive_weight() << std::endl;
+
+    std::cout << "optimal multiplication order: ";
+    Matrix_Chain<int>::print_optimal_trace_with_numbers(optimal_trace.op_order());
     return 0;
 }

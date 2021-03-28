@@ -83,13 +83,15 @@ public:
     //allowed pos == chain_.size() for inserting at the end
     void insert_matrix(Matrix<T> matr, size_t pos);
 
-    std::vector<size_t> compute_optimal_trace();
+    Trace compute_optimal_trace();
 
     static void print_optimal_trace_with_numbers(const std::vector<size_t>&);
     static void print_optimal_trace_with_brackets(const std::vector<size_t>&);
 
     Matrix<T> mult_chain_optimal(const std::vector<size_t>& order) const;
     Matrix<T> mult_chain_naive() const;
+
+    size_t naive_weight() const;
 };
 
 template<typename T>
@@ -121,7 +123,7 @@ void Matrix_Chain<T>::insert_matrix(Matrix<T> matr, size_t pos) {
 }
 
 template<typename T>
-std::vector<size_t> Matrix_Chain<T>::compute_optimal_trace() {
+Trace Matrix_Chain<T>::compute_optimal_trace() {
     make_start_trace_conditions(); //build A(i, i) conditions - without "*"
 
     for(size_t i = 1; i < traces_.size(); ++i) {
@@ -130,7 +132,7 @@ std::vector<size_t> Matrix_Chain<T>::compute_optimal_trace() {
         }
     }
 
-    return traces_(0, traces_.size() - 1).op_order();
+    return traces_(0, traces_.size() - 1);
 }
 
 template<typename T>
@@ -244,6 +246,15 @@ Matrix<T> Matrix_Chain<T>::mult_chain_naive() const {
     }
 
     return buf;
+}
+
+template<typename T>
+size_t Matrix_Chain<T>::naive_weight() const {
+    size_t weight = 0;
+    for(size_t i = 1; i < chain_.size(); ++i) {
+        weight += chain_[0].column_size() * chain_[i].column_size() * chain_[i].row_size();
+    }
+    return weight;
 }
 
 } //namespace matrix
