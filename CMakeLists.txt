@@ -11,4 +11,4 @@ include_directories(${CMAKE_SOURCE_DIR}/mem_storage ${CMAKE_SOURCE_DIR}/dynamic_
 
 add_executable(matrix_mult ${CMAKE_SOURCE_DIR}/main.cpp)
 
-target_link_libraries(matrix_mult ${CMAKE_SOURCE_DIR}/matrix)
+target_link_libraries(matrix_mult matrix)

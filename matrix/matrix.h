@@ -13,40 +13,13 @@
 
 namespace matrix {
 
-template <typename T> class Abstract_Matrix {
-protected:
-    static constexpr double DOUBLE_GAP = 1e-12;
-
-    static bool is_match(double lhs, double rhs) { //instead of ==
-        return (fabs(lhs - rhs) < DOUBLE_GAP);
-    }
-
-    static bool is_match(int lhs, int rhs) {
-        return (lhs == rhs);
-    }
-
-    static bool is_match(long long int lhs, long long int rhs) {
-        return (lhs == rhs);
-    }
-
-public:
-    virtual ~Abstract_Matrix() {}
-    virtual const T& operator()(size_t row_i, size_t column_i) const = 0;
-    virtual bool operator==(const Abstract_Matrix<T>& rhs) const = 0;
-    virtual void print() const = 0;
-};
-
 template<typename T>
 class Symmetric_Matrix;
 
 template <typename T>
-class Square_Matrix final :
-        public Abstract_Matrix<T>
-{
+class Square_Matrix final {
 private:
     mem_storage::Matrix_Storage<T> data_;
-
-    using Abstract_Matrix<T>::is_match;
 
 public:
     Square_Matrix(const T *const *data, size_t size);
@@ -76,13 +49,13 @@ public:
 
     void mult_row_on_number(size_t row_num, T number);
 
-    const T& operator()(size_t row_i, size_t column_i) const override;
+    const T& operator()(size_t row_i, size_t column_i) const;
 
     T& operator()(size_t row_i, size_t column_i);
 
     size_t size() const { return data_.column_size(); }
 
-    bool operator==(const Abstract_Matrix<T>& inp_rhs) const override;
+    bool operator==(const Square_Matrix<T>& inp_rhs) const;
 
     Square_Matrix& operator+=(const Square_Matrix& rhs)&;
 
@@ -90,20 +63,16 @@ public:
 
     Square_Matrix& operator*=(const Square_Matrix<T>& rhs)&;
 
-    void print() const override;
+    void print() const;
 
     T determinant() const;
 };
 
 
 template <typename T>
-class Symmetric_Matrix final :
-        public Abstract_Matrix<T>
-{
+class Symmetric_Matrix final {
 private:
     mem_storage::Symmetric_Matrix_Storage<T> data_;
-
-    using Abstract_Matrix<T>::is_match;
 
 public:
     Symmetric_Matrix(size_t size = 0);
@@ -117,32 +86,29 @@ public:
 
     template<typename U> Symmetric_Matrix(const Symmetric_Matrix<U>& rhs);
 
-    const T& operator()(size_t row_i, size_t column_i) const override;
+    const T& operator()(size_t row_i, size_t column_i) const;
 
     T& operator()(size_t row_i, size_t column_i);
 
     size_t size() const { return data_.size(); }
 
-    bool operator==(const Abstract_Matrix<T>& inp_rhs) const override;
+    bool operator==(const Symmetric_Matrix<T>& inp_rhs) const;
 
     Symmetric_Matrix& operator+=(const Symmetric_Matrix<T>& rhs)&;
 
     Symmetric_Matrix& operator-=(const Symmetric_Matrix<T>& rhs)&;
 
-    void print() const override;
+    void print() const;
 
     T determinant() const;
 };
 
 
 template <typename T>
-class Matrix final :
-        public Abstract_Matrix<T>
-{
+class Matrix final {
 private:
     mem_storage::Matrix_Storage<T> data_;
 
-    using Abstract_Matrix<T>::is_match;
 public:
     Matrix() = default;
 
@@ -176,14 +142,14 @@ public:
 
     void mult_row_on_number(size_t row_num, T number);
 
-    const T& operator()(size_t row_i, size_t column_i) const override;
+    const T& operator()(size_t row_i, size_t column_i) const;
 
     T& operator()(size_t row_i, size_t column_i);
 
     size_t row_size() const { return data_.row_size(); }
     size_t column_size() const { return data_.column_size(); }
 
-    bool operator==(const Abstract_Matrix<T>& inp_rhs) const override;
+    bool operator==(const Matrix<T>& inp_rhs) const;
 
     Matrix& operator+=(const Matrix<T>& rhs)&;
 
@@ -191,7 +157,7 @@ public:
 
     Matrix& operator*=(const Matrix<T>& rhs)&;
 
-    void print() const override;
+    void print() const;
 
     void swap(Matrix& rhs) { data_.swap(rhs.data_); }
 };
@@ -386,16 +352,14 @@ T& Square_Matrix<T>::operator()(size_t row_num, size_t column_num) {
 }
 
 template<typename T>
-bool Square_Matrix<T>::operator==(const Abstract_Matrix<T>& inp_rhs) const {
-    if(typeid(*this) != typeid(inp_rhs)) return false;
-
-    const Square_Matrix<T>& rhs = static_cast<const Square_Matrix&>(inp_rhs);
+bool Square_Matrix<T>::operator==(const Square_Matrix<T> &rhs) const {
+    if(typeid(*this) != typeid(rhs)) return false;
 
     if(size() != rhs.size()) return false;
 
     for(size_t i = 0; i < size(); ++i) {
         for(size_t j = 0; j < size(); ++j) {
-            if(!is_match(data_(i, j), rhs(i, j))) return false;
+            if(data_(i, j) != rhs(i, j)) return false;
         }
     }
 
@@ -555,16 +519,14 @@ T& Symmetric_Matrix<T>::operator()(size_t row_num, size_t column_num) {
 }
 
 template<typename T>
-bool Symmetric_Matrix<T>::operator==(const Abstract_Matrix<T>& inp_rhs) const {
-    if(typeid(*this) != typeid(inp_rhs)) return false;
-
-    const Symmetric_Matrix<T>& rhs = static_cast<const Symmetric_Matrix&>(inp_rhs);
+bool Symmetric_Matrix<T>::operator==(const Symmetric_Matrix<T> &rhs) const {
+    if(typeid(*this) != typeid(rhs)) return false;
 
     if(size() != rhs.size()) return false;
 
     for(size_t i = 0; i < size(); ++i) {
         for(size_t j = 0; j < (i + 1); ++j) {
-            if(!is_match(data_(i, j), rhs(i, j))) return false;
+            if(data_(i, j) != rhs(i, j)) return false;
         }
     }
 
@@ -805,16 +767,14 @@ T& Matrix<T>::operator()(size_t column_i, size_t row_i) {
 }
 
 template<typename T>
-bool Matrix<T>::operator==(const Abstract_Matrix<T>& inp_rhs) const {
-    if(typeid(*this) != typeid(inp_rhs)) return false;
-
-    const Matrix<T>& rhs = static_cast<const Matrix&>(inp_rhs);
+bool Matrix<T>::operator==(const Matrix<T> &rhs) const {
+    if(typeid(*this) != typeid(rhs)) return false;
 
     if((row_size() != rhs.row_size()) || (column_size() != rhs.column_size())) return false;
 
     for(size_t i = 0; i < column_size(); ++i) {
         for(size_t j = 0; j < row_size(); ++j) {
-            if(!is_match(data_(i, j), rhs(i, j))) return false;
+            if(data_(i, j) != rhs(i, j)) return false;
         }
     }
 
@@ -850,10 +810,8 @@ Matrix<T>& Matrix<T>::operator*=(const Matrix<T>& rhs)& {
     if(row_size() != rhs.column_size())
         throw std::invalid_argument("invalid matrices' sizes for *");
 
-    if((row_size() == 0) || (column_size() == 0)) return *this;
-
-    if(rhs.row_size() == 0) {
-        Matrix<T> tmp(column_size(), 0);
+    if((row_size() == 0) || (column_size() == 0) || (rhs.row_size() == 0)) {
+        Matrix<T> tmp(column_size(), rhs.row_size());
         swap(tmp);
         return *this;
     }

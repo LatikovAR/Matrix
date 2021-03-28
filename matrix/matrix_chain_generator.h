@@ -25,16 +25,13 @@ Matrix_Chain_Generator::Matrix_Chain_Generator(std::string filename, size_t chai
     std::ofstream out;
     out.open(filename);
 
-    out << chain_size << std::endl;
-
     size_t column_size, row_size;
     column_size = std::rand() % MAX_MATRIX_SIZE;
 
     for(size_t i = 0; i < chain_size; ++i) {
         row_size = std::rand() % MAX_MATRIX_SIZE;
 
-        Matrix<int> m = gen_matr(column_size, row_size);
-        write_matr_to_file(out, std::move(m));
+        out << column_size << " " << row_size << std::endl;
 
         column_size = row_size;
     }

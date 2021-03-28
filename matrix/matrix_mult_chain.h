@@ -18,9 +18,10 @@
 #include <iostream>
 #include <vector>
 #include <stdexcept>
-#include <map>
 #include <set>
 #include <string>
+#include <iterator>
+#include <map>
 
 #include "matrix.h"
 
@@ -91,15 +92,6 @@ public:
     Matrix<T> mult_chain_naive() const;
 };
 
-//for using matrix
-template<>
-bool Symmetric_Matrix<Trace>::operator==(const Abstract_Matrix<Trace>& inp_rhs) const {
-    return false;
-}
-
-template<>
-void Symmetric_Matrix<Trace>::print() const {}
-
 template<typename T>
 const Matrix<T>& Matrix_Chain<T>::ret_matrix(size_t number) const {
     if(number >= chain_.size())
@@ -161,8 +153,8 @@ void Matrix_Chain<T>::make_trace_condition(size_t i, size_t j) {
 
         if((traces_(i, j).weight > new_weight) || (traces_(i, j).weight == 0)) {
             traces_(i, j).weight = new_weight;
-            traces_(i, j).build_op_order(std::move(traces_(i, k).op_order()),
-                                         std::move(traces_(k + 1, j).op_order()),
+            traces_(i, j).build_op_order(traces_(i, k).op_order(),
+                                         traces_(k + 1, j).op_order(),
                                          k);
         }
     }
@@ -170,9 +162,7 @@ void Matrix_Chain<T>::make_trace_condition(size_t i, size_t j) {
 
 template<typename T>
 void Matrix_Chain<T>::print_optimal_trace_with_numbers(const std::vector<size_t>& trace) {
-    for(const auto& elem : trace) {
-        std::cout << elem << " ";
-    }
+    std::copy(trace.begin(), trace.end(), std::ostream_iterator<size_t>(std::cout, " "));
     std::cout << std::endl;
 }
 
